@@ -93,14 +93,14 @@ export default function BookMonthPage({ year, month }: { year: number; month: nu
 
   const monthlyGoals = goals.filter((g) => {
     if (g.type !== 'monthly') return false
-    if (!g.targetDate) return true
+    if (!g.targetDate) return false
     const [gy, gm] = g.targetDate.split('-').map(Number)
     return gy === year && gm === month + 1
   })
 
   const yearlyGoals = goals.filter((g) => {
     if (g.type !== 'yearly') return false
-    if (!g.targetDate) return true
+    if (!g.targetDate) return false
     const [gy] = g.targetDate.split('-').map(Number)
     return gy === year
   })
