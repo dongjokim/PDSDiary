@@ -18,11 +18,13 @@ export function BookMonthLayout({
   onChange,
   entries,
   monthlyGoals = [],
+  yearlyGoals = [],
 }: {
   value: BookMonth
   onChange: (next: BookMonth) => void
   entries: Entry[]
   monthlyGoals?: Goal[]
+  yearlyGoals?: Goal[]
 }) {
   const habits = value.habits.length === 5 ? value.habits : [...value.habits, ...Array(5).fill('')].slice(0, 5)
   const checks = value.habitChecks.length === 5 ? value.habitChecks : Array.from({ length: 5 }, () => Array(31).fill(false))
@@ -138,6 +140,39 @@ export function BookMonthLayout({
           <div className="text-sm font-semibold text-slate-900">Monthly goals</div>
           <div className="mt-3 grid grid-cols-1 gap-2">
             {monthlyGoals.map((g) => (
+              <div key={g.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-slate-900">{g.title}</div>
+                    {g.description ? (
+                      <div className="mt-1 text-xs text-slate-600">{g.description}</div>
+                    ) : null}
+                  </div>
+                  <Badge>{g.status}</Badge>
+                </div>
+                <div className="mt-2">
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <div>Progress</div>
+                    <div className="tabular-nums">{Math.round(g.progress)}%</div>
+                  </div>
+                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
+                    <div className="h-full bg-slate-900" style={{ width: `${Math.min(100, Math.max(0, g.progress))}%` }} />
+                  </div>
+                </div>
+                {g.targetDate ? (
+                  <div className="mt-2 text-xs text-slate-500">Target: {g.targetDate}</div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {yearlyGoals.length ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="text-sm font-semibold text-slate-900">Yearly goals</div>
+          <div className="mt-3 grid grid-cols-1 gap-2">
+            {yearlyGoals.map((g) => (
               <div key={g.id} className="rounded-xl border border-slate-200 bg-white p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">

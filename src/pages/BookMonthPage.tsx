@@ -98,6 +98,13 @@ export default function BookMonthPage({ year, month }: { year: number; month: nu
     return gy === year && gm === month + 1
   })
 
+  const yearlyGoals = goals.filter((g) => {
+    if (g.type !== 'yearly') return false
+    if (!g.targetDate) return true
+    const [gy] = g.targetDate.split('-').map(Number)
+    return gy === year
+  })
+
   return (
     <div className="min-h-full">
       <Header
@@ -132,6 +139,7 @@ export default function BookMonthPage({ year, month }: { year: number; month: nu
             value={draft.bookMonth}
             entries={entries}
             monthlyGoals={monthlyGoals}
+            yearlyGoals={yearlyGoals}
             onChange={(next) => {
               setDraft((d) => ({
                 ...d,
