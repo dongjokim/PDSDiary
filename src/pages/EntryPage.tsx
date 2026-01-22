@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Header } from '../components/Header'
 import { Button, Input, Textarea } from '../components/ui'
 import { TimeBlocks } from '../components/TimeBlocks'
-import { ReflectionTemplateSelector, getReflectionPrompts } from '../components/ReflectionPrompts'
 import { BookDayLayout } from '../components/BookDayLayout'
 import { GoogleCalendarPanel } from '../components/GoogleCalendarPanel'
 import type { PdsEntry } from '../types/pds'
@@ -99,17 +98,6 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
     setDraft((d) => ({ ...d, date: toLocalDateInputValue(new Date()) }))
   }
 
-  const onSelectReflectionType = (type: 'daily' | 'weekly' | 'monthly' | 'yearly') => {
-    const prompts = getReflectionPrompts(type)
-    setDraft((d) => ({
-      ...d,
-      type,
-      plan: prompts.plan,
-      do: prompts.do,
-      see: prompts.see,
-    }))
-  }
-
   return (
     <div className="min-h-full">
       <Header
@@ -132,7 +120,7 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
       <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
         <div className="grid grid-cols-1 gap-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <ReflectionTemplateSelector currentType={draft.type} onSelectType={onSelectReflectionType} />
+            <div className="text-sm font-semibold text-slate-900">Daily entry</div>
             <Button variant="secondary" onClick={onToggleLayout}>
               {layout === 'book' ? 'Standard layout' : 'Book layout'}
             </Button>

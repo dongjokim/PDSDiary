@@ -6,6 +6,7 @@ import { BookMonthLayout } from '../components/BookMonthLayout'
 import type { PdsEntry } from '../types/pds'
 import { useEntries } from '../state/EntriesContext'
 import { toLocalDateInputValue } from '../lib/time'
+import { useGoals } from '../state/GoalsContext'
 
 function pad2(n: number): string {
   return String(n).padStart(2, '0')
@@ -47,6 +48,7 @@ function makeDraftForMonth(year: number, month: number): PdsEntry {
 export default function BookMonthPage({ year, month }: { year: number; month: number }) {
   const nav = useNavigate()
   const { entries, upsert, remove } = useEntries()
+  const { goals } = useGoals()
 
   const today = new Date()
 
@@ -89,6 +91,13 @@ export default function BookMonthPage({ year, month }: { year: number; month: nu
   const displayStamp = `${year}-${pad2(month + 1)}`
   const dateToday = toLocalDateInputValue(today)
 
+  const monthlyGoals = goals.filter((g) => {
+    if (g.type !== 'monthly') return false
+    if (!g.targetDate) return true
+    const [gy, gm] = g.targetDate.split('-').map(Number)
+    return gy === year && gm === month + 1
+  })
+
   return (
     <div className="min-h-full">
       <Header
@@ -122,6 +131,7 @@ export default function BookMonthPage({ year, month }: { year: number; month: nu
           <BookMonthLayout
             value={draft.bookMonth}
             entries={entries}
+            monthlyGoals={monthlyGoals}
             onChange={(next) => {
               setDraft((d) => ({
                 ...d,

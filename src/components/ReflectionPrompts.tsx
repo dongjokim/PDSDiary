@@ -36,16 +36,13 @@ export function ReflectionTemplateSelector({
 }) {
   const types: Array<{ value: ReflectionType; label: string; description: string }> = [
     { value: 'daily', label: 'Daily', description: 'Standard daily entry' },
-    { value: 'weekly', label: 'Weekly', description: 'Review your week' },
-    { value: 'monthly', label: 'Monthly', description: 'Reflect on the month' },
-    { value: 'yearly', label: 'Yearly', description: 'Annual review & vision' },
   ]
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="text-sm font-semibold text-slate-900">Entry Type</div>
-      <div className="mt-1 text-xs text-slate-600">Choose a reflection template</div>
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="mt-1 text-xs text-slate-600">Daily entry</div>
+      <div className="mt-3 grid grid-cols-1 gap-2">
         {types.map((type) => (
           <button
             key={type.value}
