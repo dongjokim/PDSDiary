@@ -4,6 +4,7 @@ import { getMonthCalendar, getDayName, getMonthName } from '../lib/calendar'
 import type { PdsEntry } from '../types/pds'
 import { toLocalDateInputValue } from '../lib/time'
 import { Button } from './ui'
+import { categoryColorClass } from '../lib/categoryColors'
 
 export function Calendar({
   year,
@@ -22,6 +23,24 @@ export function Calendar({
 }) {
   const weeks = getMonthCalendar(year, month, entries)
   const today = toLocalDateInputValue(new Date())
+
+  const colorsForEntry = (entry?: PdsEntry): string[] => {
+    if (!entry) return []
+    const colors = new Set<string>()
+    if (entry.blocks) {
+      for (const b of entry.blocks) {
+        if (b.category) colors.add(categoryColorClass(b.category, b.color))
+      }
+    }
+    if (entry.doItemCategories) {
+      entry.doItemCategories.forEach((cat, idx) => {
+        if (!cat) return
+        const c = entry.doItemColors?.[idx] ?? ''
+        colors.add(categoryColorClass(cat, c))
+      })
+    }
+    return Array.from(colors).slice(0, 3)
+  }
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -98,9 +117,13 @@ export function Calendar({
                     <div className={clsx('text-sm font-semibold', day.isCurrentMonth ? 'text-slate-900' : '')}>
                       {day.dayOfMonth}
                     </div>
-                    {day.entry && (
-                      <div className="mt-0.5 h-1 w-6 rounded-full bg-blue-500 group-hover:bg-blue-600" />
-                    )}
+                    {day.entry ? (
+                      <div className="mt-1 flex items-center gap-1">
+                        {colorsForEntry(day.entry).map((c, idx) => (
+                          <span key={idx} className={clsx('h-1.5 w-3 rounded-full', c)} />
+                        ))}
+                      </div>
+                    ) : null}
                   </Link>
                 )
               })}

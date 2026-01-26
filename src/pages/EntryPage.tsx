@@ -11,6 +11,7 @@ import { applyGoogleEventsToHourlyPlan } from '../lib/applyCalendarToPlan'
 import { toLocalDateInputValue } from '../lib/time'
 import { useEntries } from '../state/EntriesContext'
 import { clsx } from '../lib/clsx'
+import { categoryColorClass } from '../lib/categoryColors'
 
 type DoCategory = 'project' | 'exercise' | 'family' | 'meeting' | ''
 
@@ -291,7 +292,19 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
                           })()}
                         </div>
 
-                        <Input
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
+                            const colors = (draft.doItemColors ?? ['', '', '']) as Array<
+                              'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'teal' | ''
+                            >
+                            const currentCategory = categories[index] ?? ''
+                            const currentColor = colors[index] ?? ''
+                            return currentCategory ? (
+                              <span className={clsx('h-3 w-3 rounded-full', categoryColorClass(currentCategory, currentColor))} />
+                            ) : null
+                          })()}
+                          <Input
                           value={item}
                           onChange={(e) => {
                             const newItems = [...(draft.doItems ?? ['', '', ''])]
@@ -299,7 +312,8 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
                             setDraft((d) => ({ ...d, doItems: newItems }))
                           }}
                           placeholder={`What did you do?`}
-                        />
+                          />
+                        </div>
                     </div>
                     ))}
                   </div>

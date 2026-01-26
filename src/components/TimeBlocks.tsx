@@ -2,6 +2,7 @@ import type { PdsEntry } from '../types/pds'
 import { Input } from './ui'
 import { clsx } from '../lib/clsx'
 import { TickBar } from './TickBar'
+import { categoryColorClass } from '../lib/categoryColors'
 
 type Block = NonNullable<PdsEntry['blocks']>[number]
 
@@ -21,11 +22,6 @@ const COLOR_OPTIONS = [
   { value: 'pink', label: 'Pink', className: 'bg-pink-500' },
   { value: 'teal', label: 'Teal', className: 'bg-teal-500' },
 ] as const
-
-function colorClass(value?: Block['color']) {
-  const hit = COLOR_OPTIONS.find((c) => c.value === value)
-  return hit?.className ?? 'bg-slate-300'
-}
 
 export function TimeBlocks({
   blocks,
@@ -128,8 +124,8 @@ export function TimeBlocks({
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {b.category === 'project' && b.color ? (
-                          <span className={clsx('h-3 w-3 rounded-full', colorClass(b.color))} />
+                        {b.category ? (
+                          <span className={clsx('h-3 w-3 rounded-full', categoryColorClass(b.category, b.color))} />
                         ) : null}
                         <TickBar
                           value={b.doTicks ?? 0}

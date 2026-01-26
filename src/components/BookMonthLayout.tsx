@@ -6,6 +6,7 @@ import { clsx } from '../lib/clsx'
 import { Link } from 'react-router-dom'
 import { toLocalDateInputValue } from '../lib/time'
 import type { Goal } from '../types/goals'
+import { categoryColorClass } from '../lib/categoryColors'
 
 type BookMonth = NonNullable<PdsEntry['bookMonth']>
 
@@ -43,6 +44,24 @@ export function BookMonthLayout({
 
   const weeks = getMonthCalendar(value.year, value.month, entries)
   const today = toLocalDateInputValue(new Date())
+
+  const colorsForEntry = (entry?: Entry): string[] => {
+    if (!entry) return []
+    const colors = new Set<string>()
+    if (entry.blocks) {
+      for (const b of entry.blocks) {
+        if (b.category) colors.add(categoryColorClass(b.category, b.color))
+      }
+    }
+    if (entry.doItemCategories) {
+      entry.doItemCategories.forEach((cat, idx) => {
+        if (!cat) return
+        const c = entry.doItemColors?.[idx] ?? ''
+        colors.add(categoryColorClass(cat, c))
+      })
+    }
+    return Array.from(colors).slice(0, 3)
+  }
 
   return (
     <div className="grid grid-cols-1 gap-4">
@@ -124,7 +143,13 @@ export function BookMonthLayout({
                         <div className={clsx('text-sm font-semibold', inThisMonth ? 'text-slate-900' : '')}>
                           {day.dayOfMonth}
                         </div>
-                        {day.entry && <div className="mt-0.5 h-1 w-6 rounded-full bg-blue-500 group-hover:bg-blue-600" />}
+                        {day.entry ? (
+                          <div className="mt-1 flex items-center gap-1">
+                            {colorsForEntry(day.entry).map((c, idx) => (
+                              <span key={idx} className={clsx('h-1.5 w-3 rounded-full', c)} />
+                            ))}
+                          </div>
+                        ) : null}
                       </Link>
                     )
                   })}
