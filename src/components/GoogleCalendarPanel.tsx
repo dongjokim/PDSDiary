@@ -35,6 +35,10 @@ function storeCalendarId(id: string) {
   window.localStorage.setItem(CAL_ID_KEY, JSON.stringify(list))
 }
 
+function setCalendarIds(ids: string[], setInput: (value: string) => void) {
+  setInput(ids.join(', '))
+}
+
 function loadClientId(): string {
   if (typeof window === 'undefined') return ''
   return window.localStorage.getItem(CLIENT_ID_KEY) ?? ''
@@ -376,12 +380,18 @@ export function GoogleCalendarPanel({
           </div>
           <div className="mt-2 max-h-56 overflow-auto space-y-1">
             {calendars.map((c) => {
-              const selected = c.id === calendarId.trim()
+              const selectedIds = normalizeCalendarIds(calendarId)
+              const selected = selectedIds.includes(c.id)
               return (
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => setCalendarId(c.id)}
+                  onClick={() => {
+                    const next = selected
+                      ? selectedIds.filter((id) => id !== c.id)
+                      : [...selectedIds, c.id]
+                    setCalendarIds(next, setCalendarId)
+                  }}
                   className={clsx(
                     'w-full rounded-lg px-2 py-1 text-left text-xs ring-1 ring-slate-200 hover:bg-slate-50',
                     selected ? 'bg-slate-900 text-white hover:bg-slate-900' : 'bg-white text-slate-800',
