@@ -9,9 +9,9 @@ export type PdsEntry = {
   /** 3 action items for the Do section */
   doItems?: string[]
   /** Optional category per Do item (same length as doItems) */
-  doItemCategories?: Array<'project' | 'exercise' | 'family' | 'meeting' | ''>
-  /** Optional project color per Do item (only when category = project) */
-  doItemColors?: Array<'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'teal' | ''>
+  doItemCategories?: Array<'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | ''>
+  /** Optional project tag per Do item (only when category = project) */
+  doItemProjectTags?: string[]
   see: string
   /**
    * Book-aligned monthly spread:
@@ -45,9 +45,9 @@ export type PdsEntry = {
     /** Optional comment for what you actually did */
     do?: string
     /** Optional category for the hour */
-    category?: 'project' | 'exercise' | 'family' | 'meeting' | ''
-    /** Optional project color for the hour (only when category = project) */
-    color?: 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'teal' | ''
+    category?: 'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | ''
+    /** Optional project tag for the hour (only when category = project) */
+    projectTag?: string
   }>
   /** Entry type: daily, weekly, monthly, yearly */
   type?: 'daily' | 'weekly' | 'monthly' | 'yearly'

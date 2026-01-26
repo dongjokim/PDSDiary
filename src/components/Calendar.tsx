@@ -29,14 +29,14 @@ export function Calendar({
     const colors = new Set<string>()
     if (entry.blocks) {
       for (const b of entry.blocks) {
-        if (b.category) colors.add(categoryColorClass(b.category, b.color))
+        if (b.category) colors.add(categoryColorClass(b.category, b.projectTag))
       }
     }
     if (entry.doItemCategories) {
       entry.doItemCategories.forEach((cat, idx) => {
         if (!cat) return
-        const c = entry.doItemColors?.[idx] ?? ''
-        colors.add(categoryColorClass(cat, c))
+        const tag = entry.doItemProjectTags?.[idx] ?? ''
+        colors.add(categoryColorClass(cat, tag))
       })
     }
     return Array.from(colors).slice(0, 3)

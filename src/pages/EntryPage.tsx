@@ -13,7 +13,7 @@ import { useEntries } from '../state/EntriesContext'
 import { clsx } from '../lib/clsx'
 import { categoryColorClass } from '../lib/categoryColors'
 
-type DoCategory = 'project' | 'exercise' | 'family' | 'meeting' | ''
+type DoCategory = 'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | ''
 
 function parseTags(raw: string): string[] {
   const parts = raw
@@ -55,7 +55,7 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
         blocks: existing.blocks ?? makeDefaultBlocks(),
         doItems: (existing.doItems ?? ['', '', '']).slice(0, 3),
         doItemCategories: (existing.doItemCategories ?? ['', '', '']).slice(0, 3),
-        doItemColors: (existing.doItemColors ?? ['', '', '']).slice(0, 3),
+        doItemProjectTags: (existing.doItemProjectTags ?? ['', '', '']).slice(0, 3),
       }
     }
     const newDraft = createDraft()
@@ -64,7 +64,7 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
     }
     newDraft.doItems = ['', '', '']
     newDraft.doItemCategories = ['', '', '']
-    newDraft.doItemColors = ['', '', '']
+    newDraft.doItemProjectTags = ['', '', '']
     return newDraft
   })
 
@@ -231,11 +231,7 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
                         <div className="flex items-center gap-2">
                           {(() => {
                             const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                            const colors = (draft.doItemColors ?? ['', '', '']) as Array<
-                              'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'teal' | ''
-                            >
                             const currentCategory = categories[index] ?? ''
-                            const currentColor = colors[index] ?? ''
                             return (
                               <>
                                 <select
@@ -244,9 +240,9 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
                                     const next = [...categories]
                                     const v = e.target.value as DoCategory
                                     next[index] = v
-                                    const colorNext = [...colors]
-                                    colorNext[index] = v === 'project' ? colorNext[index] : ''
-                                    setDraft((d) => ({ ...d, doItemCategories: next, doItemColors: colorNext }))
+                                    const tagNext = [...(draft.doItemProjectTags ?? ['', '', ''])]
+                                    tagNext[index] = v === 'project' ? tagNext[index] : ''
+                                    setDraft((d) => ({ ...d, doItemCategories: next, doItemProjectTags: tagNext }))
                                   }}
                                   className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700"
                                 >
@@ -255,37 +251,19 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
                                   <option value="exercise">Exercise</option>
                                   <option value="family">Family</option>
                                   <option value="meeting">Meeting</option>
+                                  <option value="wellbeing">Well-being</option>
                                 </select>
                                 {currentCategory === 'project' ? (
-                                  <div className="flex items-center gap-1">
-                                    {['blue', 'green', 'purple', 'orange', 'pink', 'teal'].map((c) => (
-                                      <button
-                                        key={c}
-                                        type="button"
-                                        onClick={() => {
-                                          const colorNext = [...colors]
-                                          colorNext[index] = c as any
-                                          setDraft((d) => ({ ...d, doItemColors: colorNext }))
-                                        }}
-                                        className={clsx(
-                                          'h-4 w-4 rounded-full ring-1 ring-slate-300',
-                                          c === 'blue'
-                                            ? 'bg-blue-500'
-                                            : c === 'green'
-                                            ? 'bg-emerald-500'
-                                            : c === 'purple'
-                                            ? 'bg-purple-500'
-                                            : c === 'orange'
-                                            ? 'bg-orange-500'
-                                            : c === 'pink'
-                                            ? 'bg-pink-500'
-                                            : 'bg-teal-500',
-                                          currentColor === c ? 'ring-2 ring-slate-700' : '',
-                                        )}
-                                        title={c}
-                                      />
-                                    ))}
-                                  </div>
+                                  <Input
+                                    value={(draft.doItemProjectTags ?? ['', '', ''])[index] ?? ''}
+                                    onChange={(e) => {
+                                      const tagNext = [...(draft.doItemProjectTags ?? ['', '', ''])]
+                                      tagNext[index] = e.target.value
+                                      setDraft((d) => ({ ...d, doItemProjectTags: tagNext }))
+                                    }}
+                                    placeholder="Project tag…"
+                                    className="h-8"
+                                  />
                                 ) : null}
                               </>
                             )
@@ -295,13 +273,17 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
                         <div className="flex items-center gap-2">
                           {(() => {
                             const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                            const colors = (draft.doItemColors ?? ['', '', '']) as Array<
-                              'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'teal' | ''
-                            >
                             const currentCategory = categories[index] ?? ''
-                            const currentColor = colors[index] ?? ''
                             return currentCategory ? (
-                              <span className={clsx('h-3 w-3 rounded-full', categoryColorClass(currentCategory, currentColor))} />
+                              <span
+                                className={clsx(
+                                  'h-3 w-3 rounded-full',
+                                  categoryColorClass(
+                                    currentCategory,
+                                    (draft.doItemProjectTags ?? ['', '', ''])[index] ?? '',
+                                  ),
+                                )}
+                              />
                             ) : null
                           })()}
                           <Input
