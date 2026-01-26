@@ -16,8 +16,10 @@ import { categoryColorClass } from '../lib/categoryColors'
 type DoCategory = 'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | ''
 
 function parseTags(raw: string): string[] {
-  const parts = raw
-    .split(',')
+  const normalized = raw.replace(/#/g, ' ')
+  const parts = normalized
+    .split(/[,\n]+/)
+    .flatMap((chunk) => chunk.split(/\s+/))
     .map((t) => t.trim())
     .filter(Boolean)
   // de-dupe, case-insensitive
@@ -184,11 +186,11 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
                 <Input
                   value={tagsToString(draft.tags)}
                   onChange={(e) => setDraft((d) => ({ ...d, tags: parseTags(e.target.value) }))}
-                  placeholder="comma, separated, tags"
+                  placeholder="comma or space separated tags"
                 />
               </div>
               <div className="mt-1 text-xs text-slate-500">
-                Tip: tags help searching later (e.g. “health”, “work”, “reflection”).
+                Tip: separate tags with commas or spaces (e.g. work, family, exercise).
               </div>
             </label>
           </div>
