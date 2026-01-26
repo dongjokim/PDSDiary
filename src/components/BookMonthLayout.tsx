@@ -204,35 +204,34 @@ export function BookMonthLayout({
       {/* Habits tracker */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="text-sm font-semibold text-slate-900">Habits</div>
-        <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr]">
-          <div className="space-y-3">
-            {habits.map((h, idx) => (
-              <label key={idx} className="block">
-                <div className="text-xs font-semibold text-slate-700">Habit {idx + 1}</div>
-                <div className="mt-1">
-                  <Input value={h} onChange={(e) => setHabitLabel(idx, e.target.value)} placeholder="" />
-                </div>
-              </label>
-            ))}
-          </div>
-
-          <div className="overflow-auto">
-            <div className="min-w-[900px] overflow-hidden rounded-xl border border-slate-300">
+        <div className="mt-3 overflow-auto">
+          <div className="min-w-[980px] overflow-hidden rounded-xl border border-slate-300">
+            <div className="grid grid-cols-[240px_1fr] border-b border-slate-300 bg-slate-50">
+              <div className="px-3 py-2 text-xs font-semibold text-slate-800">Habit</div>
               <div
-                className="grid border-b border-slate-300 bg-slate-50 text-[11px] font-semibold text-slate-800"
+                className="grid text-[11px] font-semibold text-slate-800"
                 style={{ gridTemplateColumns: 'repeat(31, minmax(24px, 1fr))' }}
               >
                 {Array.from({ length: 31 }, (_, i) => (
-                  <div key={i} className="border-r border-slate-300 px-1 py-2 text-center last:border-r-0">
+                  <div key={i} className="border-l border-slate-300 px-1 py-2 text-center">
                     {i + 1}
                   </div>
                 ))}
               </div>
+            </div>
 
-              <div className="grid grid-cols-1">
-                {checks.map((row, rIdx) => (
+            <div className="grid grid-cols-[240px_1fr]">
+              {checks.map((row, rIdx) => (
+                <div key={rIdx} className="contents">
+                  <div className="border-b border-slate-200 px-3 py-1 last:border-b-0">
+                    <Input
+                      value={habits[rIdx] ?? ''}
+                      onChange={(e) => setHabitLabel(rIdx, e.target.value)}
+                      placeholder={`Habit ${rIdx + 1}`}
+                      className="h-8"
+                    />
+                  </div>
                   <div
-                    key={rIdx}
                     className="grid border-b border-slate-200 last:border-b-0"
                     style={{ gridTemplateColumns: 'repeat(31, minmax(24px, 1fr))' }}
                   >
@@ -241,7 +240,7 @@ export function BookMonthLayout({
                         key={dIdx}
                         type="button"
                         onClick={() => toggleCheck(rIdx, dIdx)}
-                        className="flex h-8 items-center justify-center border-r border-slate-200 last:border-r-0"
+                        className="flex h-8 items-center justify-center border-l border-slate-200"
                         aria-pressed={checked}
                         title={`Habit ${rIdx + 1}, day ${dIdx + 1}`}
                       >
@@ -255,11 +254,11 @@ export function BookMonthLayout({
                       </button>
                     ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-            <div className="mt-2 text-xs text-slate-500">Scroll horizontally if needed (31 days).</div>
           </div>
+          <div className="mt-2 text-xs text-slate-500">Scroll horizontally if needed (31 days).</div>
         </div>
       </div>
     </div>
