@@ -94,6 +94,8 @@ function coerceEntry(raw: unknown): PdsEntry | null {
     doItems: Array.isArray(e.doItems)
       ? e.doItems.filter((item): item is string => typeof item === 'string').slice(0, 3)
       : undefined,
+    doItemCategories: coerceDoItemCategories(e.doItemCategories),
+    doItemColors: coerceDoItemColors(e.doItemColors),
     see: typeof e.see === 'string' ? e.see : '',
     bookMonth: coerceBookMonth(e.bookMonth),
     blocks: coerceBlocks(e.blocks),
@@ -141,6 +143,35 @@ function coerceBookMonth(raw: unknown): PdsEntry['bookMonth'] | undefined {
   }
 }
 
+const CATEGORY_VALUES = new Set(['project', 'exercise', 'family', 'meeting', ''] as const)
+const COLOR_VALUES = new Set(['blue', 'green', 'purple', 'orange', 'pink', 'teal', ''] as const)
+
+function coerceDoItemCategories(raw: unknown): PdsEntry['doItemCategories'] | undefined {
+  if (!Array.isArray(raw)) return undefined
+  const out: Array<'project' | 'exercise' | 'family' | 'meeting' | ''> = []
+  for (const v of raw.slice(0, 3)) {
+    if (typeof v === 'string' && CATEGORY_VALUES.has(v as any)) {
+      out.push(v as any)
+    } else {
+      out.push('')
+    }
+  }
+  return out.length ? out : undefined
+}
+
+function coerceDoItemColors(raw: unknown): PdsEntry['doItemColors'] | undefined {
+  if (!Array.isArray(raw)) return undefined
+  const out: Array<'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'teal' | ''> = []
+  for (const v of raw.slice(0, 3)) {
+    if (typeof v === 'string' && COLOR_VALUES.has(v as any)) {
+      out.push(v as any)
+    } else {
+      out.push('')
+    }
+  }
+  return out.length ? out : undefined
+}
+
 function coerceBlocks(raw: unknown): PdsEntry['blocks'] | undefined {
   if (!Array.isArray(raw)) return undefined
   const blocks: NonNullable<PdsEntry['blocks']> = []
@@ -151,11 +182,17 @@ function coerceBlocks(raw: unknown): PdsEntry['blocks'] | undefined {
     if (!t) continue
     const doTicks =
       typeof obj.doTicks === 'number' && !Number.isNaN(obj.doTicks) ? Math.max(0, Math.min(6, Math.round(obj.doTicks))) : undefined
+    const category =
+      typeof obj.category === 'string' && CATEGORY_VALUES.has(obj.category as any) ? (obj.category as any) : undefined
+    const color =
+      typeof obj.color === 'string' && COLOR_VALUES.has(obj.color as any) ? (obj.color as any) : undefined
     blocks.push({
       t,
       plan: typeof obj.plan === 'string' ? obj.plan : undefined,
       do: typeof obj.do === 'string' ? obj.do : undefined,
       doTicks,
+      category,
+      color,
     })
   }
   return blocks.length ? blocks : undefined

@@ -10,6 +10,9 @@ import { makeDefaultBlocks } from '../lib/blocks'
 import { applyGoogleEventsToHourlyPlan } from '../lib/applyCalendarToPlan'
 import { toLocalDateInputValue } from '../lib/time'
 import { useEntries } from '../state/EntriesContext'
+import { clsx } from '../lib/clsx'
+
+type DoCategory = 'project' | 'exercise' | 'family' | 'meeting' | ''
 
 function parseTags(raw: string): string[] {
   const parts = raw
@@ -50,6 +53,8 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
         ...existing,
         blocks: existing.blocks ?? makeDefaultBlocks(),
         doItems: (existing.doItems ?? ['', '', '']).slice(0, 3),
+        doItemCategories: (existing.doItemCategories ?? ['', '', '']).slice(0, 3),
+        doItemColors: (existing.doItemColors ?? ['', '', '']).slice(0, 3),
       }
     }
     const newDraft = createDraft()
@@ -57,6 +62,8 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
       newDraft.date = initialDate
     }
     newDraft.doItems = ['', '', '']
+    newDraft.doItemCategories = ['', '', '']
+    newDraft.doItemColors = ['', '', '']
     return newDraft
   })
 
@@ -213,22 +220,86 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
                   <div className="mt-1 text-xs text-slate-600">What did you actually do? (3 items)</div>
                   <div className="mt-3 space-y-2">
                     {(draft.doItems ?? ['', '', '']).slice(0, 3).map((item, index) => (
-                      <div key={index} className="flex items-center gap-2">
+                      <div key={index} className="flex flex-col gap-2 rounded-xl bg-slate-50 p-2 ring-1 ring-slate-200">
                       <div className="flex items-center gap-2">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
                           {index + 1}
                         </div>
-                        <div className="text-xs font-semibold text-slate-700">Do</div>
+                          <div className="text-xs font-semibold text-slate-700">Do</div>
                       </div>
-                      <Input
-                        value={item}
-                        onChange={(e) => {
-                          const newItems = [...(draft.doItems ?? ['', '', ''])]
-                          newItems[index] = e.target.value
-                          setDraft((d) => ({ ...d, doItems: newItems }))
-                        }}
-                        placeholder={`What did you do?`}
-                      />
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
+                            const colors = (draft.doItemColors ?? ['', '', '']) as Array<
+                              'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'teal' | ''
+                            >
+                            const currentCategory = categories[index] ?? ''
+                            const currentColor = colors[index] ?? ''
+                            return (
+                              <>
+                                <select
+                                  value={currentCategory}
+                                  onChange={(e) => {
+                                    const next = [...categories]
+                                    const v = e.target.value as DoCategory
+                                    next[index] = v
+                                    const colorNext = [...colors]
+                                    colorNext[index] = v === 'project' ? colorNext[index] : ''
+                                    setDraft((d) => ({ ...d, doItemCategories: next, doItemColors: colorNext }))
+                                  }}
+                                  className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700"
+                                >
+                                  <option value="">—</option>
+                                  <option value="project">Project</option>
+                                  <option value="exercise">Exercise</option>
+                                  <option value="family">Family</option>
+                                  <option value="meeting">Meeting</option>
+                                </select>
+                                {currentCategory === 'project' ? (
+                                  <div className="flex items-center gap-1">
+                                    {['blue', 'green', 'purple', 'orange', 'pink', 'teal'].map((c) => (
+                                      <button
+                                        key={c}
+                                        type="button"
+                                        onClick={() => {
+                                          const colorNext = [...colors]
+                                          colorNext[index] = c as any
+                                          setDraft((d) => ({ ...d, doItemColors: colorNext }))
+                                        }}
+                                        className={clsx(
+                                          'h-4 w-4 rounded-full ring-1 ring-slate-300',
+                                          c === 'blue'
+                                            ? 'bg-blue-500'
+                                            : c === 'green'
+                                            ? 'bg-emerald-500'
+                                            : c === 'purple'
+                                            ? 'bg-purple-500'
+                                            : c === 'orange'
+                                            ? 'bg-orange-500'
+                                            : c === 'pink'
+                                            ? 'bg-pink-500'
+                                            : 'bg-teal-500',
+                                          currentColor === c ? 'ring-2 ring-slate-700' : '',
+                                        )}
+                                        title={c}
+                                      />
+                                    ))}
+                                  </div>
+                                ) : null}
+                              </>
+                            )
+                          })()}
+                        </div>
+
+                        <Input
+                          value={item}
+                          onChange={(e) => {
+                            const newItems = [...(draft.doItems ?? ['', '', ''])]
+                            newItems[index] = e.target.value
+                            setDraft((d) => ({ ...d, doItems: newItems }))
+                          }}
+                          placeholder={`What did you do?`}
+                        />
                     </div>
                     ))}
                   </div>
