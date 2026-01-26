@@ -5,6 +5,7 @@ import { makeDefaultBlocks } from '../lib/blocks'
 import type { PdsEntry } from '../types/pds'
 import { fetchEventsInRange, groupEventsByLocalDay } from '../lib/googleCalendarRange'
 import { isTokenValid, loadStoredToken, requestAccessToken, storeToken } from '../lib/googleCalendar'
+import type { GoogleCalendarEvent } from '../lib/googleCalendar'
 
 const CAL_ID_KEY = 'pdsdiary:google:calendarId'
 const CLIENT_ID_KEY = 'pdsdiary:google:clientId'
@@ -13,6 +14,20 @@ const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly'
 function loadStr(key: string): string {
   if (typeof window === 'undefined') return ''
   return window.localStorage.getItem(key) ?? ''
+}
+
+function normalizeCalendarIds(raw: string): string[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (Array.isArray(parsed)) return parsed.filter((v) => typeof v === 'string')
+  } catch {
+    // fall through
+  }
+  return raw
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean)
 }
 
 function ymd(year: number, month1: number, day: number): string {
@@ -69,7 +84,7 @@ export function GoogleCalendarBulkSync({
   const tokenOk = useMemo(() => isTokenValid(token), [token])
 
   const clientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined) ?? loadStr(CLIENT_ID_KEY)
-  const calendarId = loadStr(CAL_ID_KEY)
+  const calendarIds = normalizeCalendarIds(loadStr(CAL_ID_KEY))
 
   const [start, setStart] = useState(() => ymd(year, 1, 1))
   const [end, setEnd] = useState(() => ymd(year, 12, 31))
@@ -109,7 +124,7 @@ export function GoogleCalendarBulkSync({
   }
 
   const runSync = async () => {
-    if (!calendarId.trim()) {
+    if (!calendarIds.length) {
       setStatus('Missing Calendar ID (set it in the Entry page Google panel first).')
       return
     }
@@ -123,7 +138,12 @@ export function GoogleCalendarBulkSync({
     try {
       const timeMin = toIsoStartOfDayLocal(start)
       const timeMax = toIsoEndExclusiveLocal(end)
-      const events = await fetchEventsInRange({ accessToken, calendarId: calendarId.trim(), timeMin, timeMax })
+      const all: GoogleCalendarEvent[] = []
+      for (const id of calendarIds) {
+        const events = await fetchEventsInRange({ accessToken, calendarId: id, timeMin, timeMax })
+        all.push(...events)
+      }
+      const events = Array.from(new Map(all.map((e) => [e.id, e])).values())
       const byDay = groupEventsByLocalDay(events)
 
       const nextEntries = entries.slice()
@@ -194,7 +214,8 @@ export function GoogleCalendarBulkSync({
       </div>
 
       <div className="mt-2 text-xs text-slate-500">
-        Using Calendar ID: <span className="font-semibold">{calendarId.trim() ? calendarId : '(not set)'}</span>
+        Using Calendar IDs:{' '}
+        <span className="font-semibold">{calendarIds.length ? calendarIds.join(', ') : '(not set)'}</span>
       </div>
 
       {status ? (

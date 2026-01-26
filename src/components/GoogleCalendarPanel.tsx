@@ -9,14 +9,30 @@ const APPLY_KEY = 'pdsdiary:google:applyToPlan'
 const CLIENT_ID_KEY = 'pdsdiary:google:clientId'
 const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly'
 
+function normalizeCalendarIds(raw: string): string[] {
+  return raw
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean)
+}
+
 function loadCalendarId(): string {
   if (typeof window === 'undefined') return ''
-  return window.localStorage.getItem(CAL_ID_KEY) ?? ''
+  const raw = window.localStorage.getItem(CAL_ID_KEY) ?? ''
+  if (!raw) return ''
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (Array.isArray(parsed)) return parsed.filter((v) => typeof v === 'string').join(', ')
+  } catch {
+    // fall through
+  }
+  return raw
 }
 
 function storeCalendarId(id: string) {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(CAL_ID_KEY, id)
+  const list = normalizeCalendarIds(id)
+  window.localStorage.setItem(CAL_ID_KEY, JSON.stringify(list))
 }
 
 function loadClientId(): string {
@@ -161,8 +177,13 @@ export function GoogleCalendarPanel({
       const items = await fetchCalendarList({ accessToken })
       if (reqId !== inFlightRef.current) return
       setCalendars(items)
-      const has = items.some((c) => c.id === calendarId.trim())
-      setStatus(items.length ? `Loaded ${items.length} calendars.${calendarId.trim() ? (has ? ' Calendar ID is accessible.' : ' Calendar ID not found in your list.') : ''}` : 'No calendars returned.')
+      const ids = normalizeCalendarIds(calendarId)
+      const hasAny = ids.length ? ids.some((id) => items.some((c) => c.id === id)) : false
+      setStatus(
+        items.length
+          ? `Loaded ${items.length} calendars.${ids.length ? (hasAny ? ' Calendar ID is accessible.' : ' Calendar ID not found in your list.') : ''}`
+          : 'No calendars returned.',
+      )
     } catch (e) {
       if (reqId !== inFlightRef.current) return
       setStatus(e instanceof Error ? e.message : 'Failed to list calendars')
@@ -181,8 +202,9 @@ export function GoogleCalendarPanel({
   }
 
   const loadEvents = async () => {
-    if (!calendarId.trim()) {
-      setStatus('Please enter a Calendar ID.')
+    const ids = normalizeCalendarIds(calendarId)
+    if (!ids.length) {
+      setStatus('Please enter at least one Calendar ID.')
       return
     }
     setLoading(true)
@@ -195,11 +217,16 @@ export function GoogleCalendarPanel({
         setEvents(null)
         return
       }
-      const items = await fetchDayEvents({ accessToken, calendarId: calendarId.trim(), date })
+      const all: GoogleCalendarEvent[] = []
+      for (const id of ids) {
+        const items = await fetchDayEvents({ accessToken, calendarId: id, date })
+        all.push(...items)
+      }
+      const deduped = Array.from(new Map(all.map((e) => [e.id, e])).values())
       if (reqId !== inFlightRef.current) return
-      setEvents(items)
-      if (applyToPlan && onApplyToPlan) onApplyToPlan(items)
-      setStatus(items.length ? `Loaded ${items.length} events.` : 'No events for this day.')
+      setEvents(deduped)
+      if (applyToPlan && onApplyToPlan) onApplyToPlan(deduped)
+      setStatus(deduped.length ? `Loaded ${deduped.length} events.` : 'No events for this day.')
     } catch (e) {
       if (reqId !== inFlightRef.current) return
       setStatus(e instanceof Error ? e.message : 'Failed to load events')
@@ -291,12 +318,12 @@ export function GoogleCalendarPanel({
         )}
 
         <label className="block">
-          <div className="text-xs font-semibold text-slate-700">Calendar ID</div>
+          <div className="text-xs font-semibold text-slate-700">Calendar IDs (comma-separated)</div>
           <div className="mt-1">
             <Input
               value={calendarId}
               onChange={(e) => setCalendarId(e.target.value)}
-              placeholder="e.g. family0014209...@group.calendar.google.com"
+              placeholder="primary@... , family@... , other@..."
             />
           </div>
         </label>
