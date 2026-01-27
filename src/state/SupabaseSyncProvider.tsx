@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from './AuthContext'
@@ -24,11 +24,14 @@ function mergeByUpdatedAt<T extends { id: string; updatedAt: string }>(local: T[
 
 export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const { entries, replaceAll: replaceEntries } = useEntries()
-  const { goals, replaceAll: replaceGoals } = useGoals()
+  const { entries, replaceAll: replaceEntries, hydrated: entriesHydrated } = useEntries()
+  const { goals, replaceAll: replaceGoals, hydrated: goalsHydrated } = useGoals()
 
   const readyRef = useRef(false)
+  const pulledRef = useRef(false)
+  const initialPushRef = useRef(false)
   const debounceRef = useRef<number | null>(null)
+  const [status, setStatus] = useState<string>('Supabase sync: idle')
 
   const userId = user?.sub ?? null
 
@@ -40,6 +43,7 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
     async function pull() {
       const client = supabase
       if (!client) return
+      setStatus('Supabase sync: pulling...')
       const { data, error } = await client
         .from('pds_data')
         .select('user_id, entries, goals, updated_at')
@@ -49,7 +53,8 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
       if (cancelled) return
       if (error) {
         // ignore for now
-        readyRef.current = true
+        setStatus('Supabase sync: pull failed')
+        pulledRef.current = true
         return
       }
       if (data) {
@@ -58,11 +63,14 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
           const remoteGoals = (data.goals as any[]) ?? []
           replaceEntries(mergeByUpdatedAt(entries as any, remoteEntries as any))
           replaceGoals(mergeByUpdatedAt(goals as any, remoteGoals as any))
+          setStatus('Supabase sync: merged')
         } catch {
           // ignore
+          setStatus('Supabase sync: merge failed')
         }
       }
-      readyRef.current = true
+      if (!data) setStatus('Supabase sync: no remote data')
+      pulledRef.current = true
     }
 
     void pull()
@@ -71,6 +79,12 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
       cancelled = true
     }
   }, [entries, goals, replaceEntries, replaceGoals, userId])
+
+  useEffect(() => {
+    if (!pulledRef.current) return
+    if (!entriesHydrated || !goalsHydrated) return
+    readyRef.current = true
+  }, [entriesHydrated, goalsHydrated])
 
   const payload = useMemo(
     () => ({
@@ -85,17 +99,44 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase || !userId) return
     if (!readyRef.current) return
+    if (!entriesHydrated || !goalsHydrated) return
+
+    // Initial push after local data is loaded
+    if (!initialPushRef.current) {
+      const client = supabase
+      if (client) {
+        setStatus('Supabase sync: uploading...')
+        client.from('pds_data').upsert(payload, { onConflict: 'user_id' })
+          .then(({ error }) => {
+            if (error) setStatus('Supabase sync: upload failed')
+            else setStatus('Supabase sync: up to date')
+          })
+      }
+      initialPushRef.current = true
+      return
+    }
+
     if (debounceRef.current) window.clearTimeout(debounceRef.current)
     debounceRef.current = window.setTimeout(() => {
       const client = supabase
       if (!client) return
+      setStatus('Supabase sync: uploading...')
       client.from('pds_data').upsert(payload, { onConflict: 'user_id' })
+        .then(({ error }) => {
+          if (error) setStatus('Supabase sync: upload failed')
+          else setStatus('Supabase sync: up to date')
+        })
     }, 1200)
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current)
     }
-  }, [payload, userId])
+  }, [payload, userId, entriesHydrated, goalsHydrated])
 
-  return <>{children}</>
+  return (
+    <>
+      <div className="hidden" data-supabase-sync-status={status} />
+      {children}
+    </>
+  )
 }
 

@@ -9,6 +9,7 @@ import { useAuth } from './AuthContext'
 
 type EntriesContextValue = {
   entries: PdsEntry[]
+  hydrated: boolean
   getById: (id: string) => PdsEntry | undefined
   upsert: (entry: Omit<PdsEntry, 'updatedAt'> & Partial<Pick<PdsEntry, 'updatedAt'>>) => void
   remove: (id: string) => void
@@ -26,15 +27,18 @@ export function EntriesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const userId = user?.sub ?? null
   const [entries, setEntries] = useState<PdsEntry[]>([])
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     if (!userId) {
       setEntries([])
+      setHydrated(false)
       return
     }
     migrateEntriesToUser(userId)
     const loaded = loadEntries(userId)
     setEntries([...loaded].sort(byUpdatedDesc))
+    setHydrated(true)
   }, [userId])
 
   useEffect(() => {
@@ -94,13 +98,14 @@ export function EntriesProvider({ children }: { children: ReactNode }) {
   const value = useMemo<EntriesContextValue>(
     () => ({
       entries,
+      hydrated,
       getById,
       upsert,
       remove,
       replaceAll,
       createDraft,
     }),
-    [entries, getById, upsert, remove, replaceAll, createDraft],
+    [entries, hydrated, getById, upsert, remove, replaceAll, createDraft],
   )
 
   return <EntriesContext.Provider value={value}>{children}</EntriesContext.Provider>

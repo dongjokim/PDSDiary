@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from './ui'
 import { useAuth } from '../state/AuthContext'
+import { useEffect, useState } from 'react'
 
 export function Header({
   title,
@@ -11,6 +12,16 @@ export function Header({
   right?: ReactNode
 }) {
   const { user, signOut } = useAuth()
+  const [syncStatus, setSyncStatus] = useState<string>('Supabase sync: idle')
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const el = document.querySelector('[data-supabase-sync-status]') as HTMLElement | null
+      const next = el?.getAttribute('data-supabase-sync-status')
+      if (next) setSyncStatus(next)
+    }, 1000)
+    return () => window.clearInterval(id)
+  }, [])
 
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/80 backdrop-blur">
@@ -37,6 +48,9 @@ export function Header({
               ) : null}
               <span className="max-w-[180px] truncate">{user.email ?? user.name ?? 'Signed in'}</span>
             </div>
+          ) : null}
+          {user ? (
+            <div className="hidden text-xs text-slate-500 sm:block">{syncStatus}</div>
           ) : null}
           {right}
           {user ? (

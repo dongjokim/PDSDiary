@@ -5,6 +5,7 @@ import { useAuth } from './AuthContext'
 
 type GoalsContextValue = {
   goals: Goal[]
+  hydrated: boolean
   addGoal: (goal: Goal) => void
   updateGoal: (id: string, updates: Partial<Goal>) => void
   deleteGoal: (id: string) => void
@@ -18,14 +19,17 @@ export function GoalsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const userId = user?.sub ?? null
   const [goals, setGoals] = useState<Goal[]>([])
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     if (!userId) {
       setGoals([])
+      setHydrated(false)
       return
     }
     migrateGoalsToUser(userId)
     setGoals(loadGoals(userId))
+    setHydrated(true)
   }, [userId])
 
   const persist = useCallback((newGoals: Goal[]) => {
@@ -65,7 +69,7 @@ export function GoalsProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <GoalsContext.Provider value={{ goals, addGoal, updateGoal, deleteGoal, getById, replaceAll }}>
+    <GoalsContext.Provider value={{ goals, hydrated, addGoal, updateGoal, deleteGoal, getById, replaceAll }}>
       {children}
     </GoalsContext.Provider>
   )
