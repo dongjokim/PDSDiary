@@ -23,6 +23,48 @@ function byUpdatedDesc(a: PdsEntry, b: PdsEntry): number {
   return b.updatedAt.localeCompare(a.updatedAt)
 }
 
+function normalizeProjectTags(entry: PdsEntry): PdsEntry {
+  let changed = false
+
+  let doItemCategories = entry.doItemCategories ? entry.doItemCategories.slice(0, 3) : undefined
+  const doItemProjectTags = entry.doItemProjectTags ? entry.doItemProjectTags.slice(0, 3) : undefined
+
+  if (doItemProjectTags) {
+    if (!doItemCategories) {
+      doItemCategories = doItemProjectTags.map((t) => (t ? 'project' : ''))
+      changed = doItemCategories.some((v) => v === 'project')
+    } else {
+      doItemProjectTags.forEach((tag, idx) => {
+        if (tag && !doItemCategories?.[idx]) {
+          doItemCategories[idx] = 'project'
+          changed = true
+        }
+      })
+    }
+  }
+
+  const blocks = entry.blocks
+    ? entry.blocks.map((b) => {
+        if (b.projectTag && !b.category) {
+          changed = true
+          return { ...b, category: 'project' as PdsEntry['blocks'][number]['category'] }
+        }
+        return b
+      })
+    : undefined
+
+  if (!changed) return entry
+  return {
+    ...entry,
+    doItemCategories,
+    blocks,
+  }
+}
+
+function normalizeEntries(entries: PdsEntry[]): PdsEntry[] {
+  return entries.map(normalizeProjectTags)
+}
+
 export function EntriesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const userId = user?.supabaseUserId ?? user?.sub ?? null
@@ -37,7 +79,7 @@ export function EntriesProvider({ children }: { children: ReactNode }) {
     }
     migrateEntriesToUser(userId)
     const loaded = loadEntries(userId)
-    setEntries([...loaded].sort(byUpdatedDesc))
+    setEntries(normalizeEntries([...loaded]).sort(byUpdatedDesc))
     setHydrated(true)
   }, [userId])
 
@@ -76,7 +118,7 @@ export function EntriesProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const replaceAll = useCallback((nextEntries: PdsEntry[]) => {
-    setEntries([...nextEntries].sort(byUpdatedDesc))
+    setEntries(normalizeEntries([...nextEntries]).sort(byUpdatedDesc))
   }, [])
 
   const createDraft = useCallback((): PdsEntry => {
