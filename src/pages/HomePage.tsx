@@ -9,6 +9,7 @@ import { coerceImportedExport, makeExport } from '../lib/storage'
 import { generateYearEndReport } from '../lib/reports'
 import { useEntries } from '../state/EntriesContext'
 import { useGoals } from '../state/GoalsContext'
+import { SupabaseSyncPanel } from '../components/SupabaseSyncPanel'
 
 function downloadJson(filename: string, data: unknown) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -252,6 +253,7 @@ export default function HomePage() {
             </div>
           ) : null}
 
+          <SupabaseSyncPanel />
         </div>
       </main>
     </div>

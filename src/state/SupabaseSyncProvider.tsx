@@ -31,7 +31,10 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
   const pulledRef = useRef(false)
   const initialPushRef = useRef(false)
   const debounceRef = useRef<number | null>(null)
+  const pullTimeoutRef = useRef<number | null>(null)
   const [status, setStatus] = useState<string>('Supabase sync: idle')
+  const [lastError, setLastError] = useState<string | null>(null)
+  const [pullTick, setPullTick] = useState(0)
   const [ready, setReady] = useState(false)
 
   const userId = user?.supabaseUserId ?? null
@@ -39,11 +42,16 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
   const pushNow = (label: string) => {
     const client = supabase
     if (!client) return
+    setLastError(null)
     setStatus(`Supabase sync: ${label}`)
     client.from('pds_data').upsert(payload, { onConflict: 'user_id' })
       .then(({ error }) => {
-        if (error) setStatus(`Supabase sync: upload failed (${error.message})`)
-        else setStatus('Supabase sync: up to date')
+        if (error) {
+          setLastError(error.message)
+          setStatus(`Supabase sync: upload failed (${error.message})`)
+        } else {
+          setStatus('Supabase sync: up to date')
+        }
       })
   }
 
@@ -60,7 +68,12 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
     async function pull() {
       const client = supabase
       if (!client) return
+      setLastError(null)
       setStatus('Supabase sync: pulling...')
+      if (pullTimeoutRef.current) window.clearTimeout(pullTimeoutRef.current)
+      pullTimeoutRef.current = window.setTimeout(() => {
+        setStatus('Supabase sync: pulling… (slow connection)')
+      }, 8000)
       const { data, error } = await client
         .from('pds_data')
         .select('user_id, entries, goals, updated_at')
@@ -68,7 +81,12 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
         .maybeSingle<SyncRow>()
 
       if (cancelled) return
+      if (pullTimeoutRef.current) {
+        window.clearTimeout(pullTimeoutRef.current)
+        pullTimeoutRef.current = null
+      }
       if (error) {
+        setLastError(error.message)
         setStatus(`Supabase sync: pull failed (${error.message})`)
         pulledRef.current = true
         return
@@ -97,8 +115,38 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true
+      if (pullTimeoutRef.current) {
+        window.clearTimeout(pullTimeoutRef.current)
+        pullTimeoutRef.current = null
+      }
     }
-  }, [replaceEntries, replaceGoals, userId, entriesHydrated, goalsHydrated])
+  }, [replaceEntries, replaceGoals, userId, entriesHydrated, goalsHydrated, pullTick])
+
+  useEffect(() => {
+    const onPull = () => {
+      pulledRef.current = false
+      initialPushRef.current = false
+      if (!userId) {
+        setStatus('Supabase sync: idle (not signed into Supabase)')
+        return
+      }
+      setStatus('Supabase sync: pulling...')
+      setPullTick((t) => t + 1)
+    }
+    const onPush = () => {
+      if (!userId) {
+        setStatus('Supabase sync: idle (not signed into Supabase)')
+        return
+      }
+      pushNow('uploading...')
+    }
+    window.addEventListener('pds-supabase-pull', onPull)
+    window.addEventListener('pds-supabase-push', onPush)
+    return () => {
+      window.removeEventListener('pds-supabase-pull', onPull)
+      window.removeEventListener('pds-supabase-push', onPush)
+    }
+  }, [pushNow, userId])
 
   useEffect(() => {
     if (!pulledRef.current) return
@@ -141,7 +189,11 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <div className="hidden" data-supabase-sync-status={status} />
+      <div
+        className="hidden"
+        data-supabase-sync-status={status}
+        data-supabase-sync-error={lastError ?? ''}
+      />
       {children}
     </>
   )
