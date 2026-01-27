@@ -34,7 +34,7 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<string>('Supabase sync: idle')
   const [ready, setReady] = useState(false)
 
-  const userId = user?.sub ?? null
+  const userId = user?.supabaseUserId ?? null
 
   const pushNow = (label: string) => {
     const client = supabase

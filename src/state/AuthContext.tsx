@@ -7,6 +7,7 @@ export type AuthUser = {
   email?: string
   name?: string
   picture?: string
+  supabaseUserId?: string
 }
 
 type AuthContextValue = {

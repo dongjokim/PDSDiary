@@ -65,8 +65,21 @@ export default function LoginPage() {
           if (isSupabaseConfigured() && supabase) {
             supabase.auth
               .signInWithIdToken({ provider: 'google', token })
-              .then(({ error }) => {
-                if (error) setStatus(`Supabase sync disabled: ${error.message}`)
+              .then(({ data, error }) => {
+                if (error) {
+                  setStatus(`Supabase sync disabled: ${error.message}`)
+                  return
+                }
+                const supaId = data?.user?.id
+                if (supaId) {
+                  setUser({
+                    sub: payload.sub,
+                    email: payload.email,
+                    name: payload.name,
+                    picture: payload.picture,
+                    supabaseUserId: supaId,
+                  })
+                }
               })
               .catch(() => setStatus('Supabase sync disabled: failed to sign in'))
           }

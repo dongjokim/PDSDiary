@@ -25,7 +25,7 @@ function byUpdatedDesc(a: PdsEntry, b: PdsEntry): number {
 
 export function EntriesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const userId = user?.sub ?? null
+  const userId = user?.supabaseUserId ?? null
   const [entries, setEntries] = useState<PdsEntry[]>([])
   const [hydrated, setHydrated] = useState(false)
 
