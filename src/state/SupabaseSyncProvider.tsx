@@ -53,6 +53,7 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
       setStatus('Supabase sync: idle (not signed into Supabase)')
       return
     }
+    if (pulledRef.current) return
 
     let cancelled = false
 
@@ -68,7 +69,6 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
 
       if (cancelled) return
       if (error) {
-        // ignore for now
         setStatus(`Supabase sync: pull failed (${error.message})`)
         pulledRef.current = true
         return
@@ -81,13 +81,11 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
           replaceGoals(mergeByUpdatedAt(goals as any, remoteGoals as any))
           setStatus('Supabase sync: merged')
         } catch {
-          // ignore
           setStatus('Supabase sync: merge failed')
         }
       }
       if (!data) {
         setStatus('Supabase sync: no remote data')
-        // If there is no remote row, push local data immediately.
         if (entriesHydrated && goalsHydrated) {
           pushNow('uploading...')
         }
@@ -100,7 +98,7 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [entries, goals, replaceEntries, replaceGoals, userId, entriesHydrated, goalsHydrated])
+  }, [replaceEntries, replaceGoals, userId, entriesHydrated, goalsHydrated])
 
   useEffect(() => {
     if (!pulledRef.current) return
