@@ -5,6 +5,7 @@ import { Button, Input, Textarea } from '../components/ui'
 import { TimeBlocks } from '../components/TimeBlocks'
 import { BookDayLayout } from '../components/BookDayLayout'
 import { GoogleCalendarPanel } from '../components/GoogleCalendarPanel'
+import { TagPicker } from '../components/TagPicker'
 import type { PdsEntry } from '../types/pds'
 import { makeDefaultBlocks } from '../lib/blocks'
 import { applyGoogleEventsToHourlyPlan } from '../lib/applyCalendarToPlan'
@@ -41,7 +42,7 @@ function tagsToString(tags: string[]): string {
 export default function EntryPage({ entryId, initialDate }: { entryId?: string; initialDate?: string }) {
   const nav = useNavigate()
   const id = entryId
-  const { getById, upsert, remove, createDraft } = useEntries()
+  const { getById, upsert, remove, createDraft, entries } = useEntries()
 
   const existing = useMemo(() => (id ? getById(id) : undefined), [getById, id])
 
@@ -107,6 +108,10 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
   const onResetToday = () => {
     setDraft((d) => ({ ...d, date: toLocalDateInputValue(new Date()) }))
   }
+
+  const tagSuggestions = Array.from(
+    new Set(entries.flatMap((e) => e.tags).map((t) => t.trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b))
 
   return (
     <div className="min-h-full">
@@ -191,6 +196,9 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
               </div>
               <div className="mt-1 text-xs text-slate-500">
                 Tip: separate tags with commas or spaces (e.g. work, family, exercise).
+              </div>
+              <div className="mt-2">
+                <TagPicker value={draft.tags} suggestions={tagSuggestions} onChange={(next) => setDraft((d) => ({ ...d, tags: next }))} />
               </div>
             </label>
           </div>

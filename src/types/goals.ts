@@ -6,6 +6,7 @@ export type Goal = {
   status: 'active' | 'completed' | 'archived'
   targetDate?: string // YYYY-MM-DD
   progress: number // 0-100
+  tags?: string[]
   milestones: Array<{
     id: string
     title: string

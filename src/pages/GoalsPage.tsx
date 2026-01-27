@@ -4,6 +4,8 @@ import { Header } from '../components/Header'
 import { Button, Input, Textarea, Badge } from '../components/ui'
 import { useGoals } from '../state/GoalsContext'
 import type { Goal } from '../types/goals'
+import { TagPicker } from '../components/TagPicker'
+import { useEntries } from '../state/EntriesContext'
 
 function createGoal(type: 'yearly' | 'quarterly' | 'monthly'): Goal {
   return {
@@ -13,6 +15,7 @@ function createGoal(type: 'yearly' | 'quarterly' | 'monthly'): Goal {
     type,
     status: 'active',
     progress: 0,
+    tags: [],
     milestones: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -21,6 +24,7 @@ function createGoal(type: 'yearly' | 'quarterly' | 'monthly'): Goal {
 
 export default function GoalsPage() {
   const { goals, addGoal, updateGoal, deleteGoal } = useGoals()
+  const { entries } = useEntries()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<Goal | null>(null)
 
@@ -101,6 +105,10 @@ export default function GoalsPage() {
     monthly: activeGoals.filter((g) => g.type === 'monthly'),
   }
 
+  const tagSuggestions = Array.from(
+    new Set(entries.flatMap((e) => e.tags).map((t) => t.trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b))
+
   return (
     <div className="min-h-full">
       <Header
@@ -172,6 +180,17 @@ export default function GoalsPage() {
                       />
                     </div>
                   </label>
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold text-slate-700">Tags</div>
+                  <div className="mt-2">
+                    <TagPicker
+                      value={draft.tags ?? []}
+                      suggestions={tagSuggestions}
+                      onChange={(next) => setDraft({ ...draft, tags: next })}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
