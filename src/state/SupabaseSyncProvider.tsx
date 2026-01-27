@@ -42,7 +42,7 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
     setStatus(`Supabase sync: ${label}`)
     client.from('pds_data').upsert(payload, { onConflict: 'user_id' })
       .then(({ error }) => {
-        if (error) setStatus('Supabase sync: upload failed')
+        if (error) setStatus(`Supabase sync: upload failed (${error.message})`)
         else setStatus('Supabase sync: up to date')
       })
   }
