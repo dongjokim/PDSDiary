@@ -48,7 +48,11 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    if (!isSupabaseConfigured() || !supabase || !userId) return
+    if (!isSupabaseConfigured() || !supabase) return
+    if (!userId) {
+      setStatus('Supabase sync: idle (not signed into Supabase)')
+      return
+    }
 
     let cancelled = false
 
@@ -116,7 +120,8 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
   )
 
   useEffect(() => {
-    if (!isSupabaseConfigured() || !supabase || !userId) return
+    if (!isSupabaseConfigured() || !supabase) return
+    if (!userId) return
     if (!readyRef.current || !ready) return
     if (!entriesHydrated || !goalsHydrated) return
 

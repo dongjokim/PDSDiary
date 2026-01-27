@@ -17,7 +17,7 @@ const GoalsContext = createContext<GoalsContextValue | null>(null)
 
 export function GoalsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const userId = user?.supabaseUserId ?? null
+  const userId = user?.supabaseUserId ?? user?.sub ?? null
   const [goals, setGoals] = useState<Goal[]>([])
   const [hydrated, setHydrated] = useState(false)
 
