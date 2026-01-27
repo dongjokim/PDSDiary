@@ -32,6 +32,7 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
   const initialPushRef = useRef(false)
   const debounceRef = useRef<number | null>(null)
   const [status, setStatus] = useState<string>('Supabase sync: idle')
+  const [ready, setReady] = useState(false)
 
   const userId = user?.sub ?? null
 
@@ -84,6 +85,7 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
     if (!pulledRef.current) return
     if (!entriesHydrated || !goalsHydrated) return
     readyRef.current = true
+    setReady(true)
   }, [entriesHydrated, goalsHydrated])
 
   const payload = useMemo(
@@ -98,7 +100,7 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase || !userId) return
-    if (!readyRef.current) return
+    if (!readyRef.current || !ready) return
     if (!entriesHydrated || !goalsHydrated) return
 
     // Initial push after local data is loaded
@@ -130,7 +132,7 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current)
     }
-  }, [payload, userId, entriesHydrated, goalsHydrated])
+  }, [payload, userId, entriesHydrated, goalsHydrated, ready])
 
   return (
     <>
