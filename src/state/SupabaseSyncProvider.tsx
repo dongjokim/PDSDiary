@@ -53,7 +53,7 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
       if (cancelled) return
       if (error) {
         // ignore for now
-        setStatus('Supabase sync: pull failed')
+        setStatus(`Supabase sync: pull failed (${error.message})`)
         pulledRef.current = true
         return
       }
