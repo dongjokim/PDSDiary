@@ -23,10 +23,13 @@ function byUpdatedDesc(a: PdsEntry, b: PdsEntry): number {
   return b.updatedAt.localeCompare(a.updatedAt)
 }
 
+type DoCategory = NonNullable<PdsEntry['doItemCategories']>[number]
+
 function normalizeProjectTags(entry: PdsEntry): PdsEntry {
   let changed = false
 
-  let doItemCategories = entry.doItemCategories ? entry.doItemCategories.slice(0, 3) : ['', '', '']
+  const hadCategories = Boolean(entry.doItemCategories?.length)
+  let doItemCategories: DoCategory[] = entry.doItemCategories ? entry.doItemCategories.slice(0, 3) : (['', '', ''] as DoCategory[])
   const doItemProjectTags = entry.doItemProjectTags ? entry.doItemProjectTags.slice(0, 3) : undefined
 
   if (doItemProjectTags) {
@@ -51,7 +54,7 @@ function normalizeProjectTags(entry: PdsEntry): PdsEntry {
   if (!changed) return entry
   return {
     ...entry,
-    doItemCategories,
+    doItemCategories: changed || hadCategories ? doItemCategories : undefined,
     blocks,
   }
 }
