@@ -36,6 +36,17 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
 
   const userId = user?.sub ?? null
 
+  const pushNow = (label: string) => {
+    const client = supabase
+    if (!client) return
+    setStatus(`Supabase sync: ${label}`)
+    client.from('pds_data').upsert(payload, { onConflict: 'user_id' })
+      .then(({ error }) => {
+        if (error) setStatus('Supabase sync: upload failed')
+        else setStatus('Supabase sync: up to date')
+      })
+  }
+
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase || !userId) return
 
@@ -70,7 +81,13 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
           setStatus('Supabase sync: merge failed')
         }
       }
-      if (!data) setStatus('Supabase sync: no remote data')
+      if (!data) {
+        setStatus('Supabase sync: no remote data')
+        // If there is no remote row, push local data immediately.
+        if (entriesHydrated && goalsHydrated) {
+          pushNow('uploading...')
+        }
+      }
       pulledRef.current = true
     }
 
@@ -79,7 +96,7 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [entries, goals, replaceEntries, replaceGoals, userId])
+  }, [entries, goals, replaceEntries, replaceGoals, userId, entriesHydrated, goalsHydrated])
 
   useEffect(() => {
     if (!pulledRef.current) return
@@ -105,29 +122,14 @@ export function SupabaseSyncProvider({ children }: { children: ReactNode }) {
 
     // Initial push after local data is loaded
     if (!initialPushRef.current) {
-      const client = supabase
-      if (client) {
-        setStatus('Supabase sync: uploading...')
-        client.from('pds_data').upsert(payload, { onConflict: 'user_id' })
-          .then(({ error }) => {
-            if (error) setStatus('Supabase sync: upload failed')
-            else setStatus('Supabase sync: up to date')
-          })
-      }
+      pushNow('uploading...')
       initialPushRef.current = true
       return
     }
 
     if (debounceRef.current) window.clearTimeout(debounceRef.current)
     debounceRef.current = window.setTimeout(() => {
-      const client = supabase
-      if (!client) return
-      setStatus('Supabase sync: uploading...')
-      client.from('pds_data').upsert(payload, { onConflict: 'user_id' })
-        .then(({ error }) => {
-          if (error) setStatus('Supabase sync: upload failed')
-          else setStatus('Supabase sync: up to date')
-        })
+      pushNow('uploading...')
     }, 1200)
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current)
