@@ -26,28 +26,23 @@ function byUpdatedDesc(a: PdsEntry, b: PdsEntry): number {
 function normalizeProjectTags(entry: PdsEntry): PdsEntry {
   let changed = false
 
-  let doItemCategories = entry.doItemCategories ? entry.doItemCategories.slice(0, 3) : undefined
+  let doItemCategories = entry.doItemCategories ? entry.doItemCategories.slice(0, 3) : ['', '', '']
   const doItemProjectTags = entry.doItemProjectTags ? entry.doItemProjectTags.slice(0, 3) : undefined
 
   if (doItemProjectTags) {
-    if (!doItemCategories) {
-      doItemCategories = doItemProjectTags.map((t) => (t ? 'project' : ''))
-      changed = doItemCategories.some((v) => v === 'project')
-    } else {
-      doItemProjectTags.forEach((tag, idx) => {
-        if (tag && !doItemCategories?.[idx]) {
-          doItemCategories[idx] = 'project'
-          changed = true
-        }
-      })
-    }
+    doItemProjectTags.forEach((tag, idx) => {
+      if (tag && !doItemCategories[idx]) {
+        doItemCategories[idx] = 'project'
+        changed = true
+      }
+    })
   }
 
   const blocks = entry.blocks
     ? entry.blocks.map((b) => {
         if (b.projectTag && !b.category) {
           changed = true
-          return { ...b, category: 'project' as PdsEntry['blocks'][number]['category'] }
+          return { ...b, category: 'project' as NonNullable<PdsEntry['blocks']>[number]['category'] }
         }
         return b
       })
