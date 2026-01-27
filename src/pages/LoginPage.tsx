@@ -3,6 +3,7 @@ import { Button, Input } from '../components/ui'
 import { loadGoogleIdentityScript } from '../lib/googleIdentity'
 import { decodeGoogleIdToken } from '../lib/googleJwt'
 import { useAuth } from '../state/AuthContext'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 const CLIENT_ID_KEY = 'pdsdiary:google:clientId'
 
@@ -61,6 +62,14 @@ export default function LoginPage() {
             name: payload.name,
             picture: payload.picture,
           })
+          if (isSupabaseConfigured() && supabase) {
+            supabase.auth
+              .signInWithIdToken({ provider: 'google', token })
+              .then(({ error }) => {
+                if (error) setStatus(`Supabase sync disabled: ${error.message}`)
+              })
+              .catch(() => setStatus('Supabase sync disabled: failed to sign in'))
+          }
         },
       })
       window.google.accounts.id.renderButton(btnRef.current, {
@@ -84,6 +93,11 @@ export default function LoginPage() {
           <div className="mt-1 text-sm text-slate-600">
             Use your Google account to access the diary and calendar sync.
           </div>
+          {!isSupabaseConfigured() ? (
+            <div className="mt-2 text-xs text-slate-500">
+              Supabase sync is not configured. You can still use the app locally.
+            </div>
+          ) : null}
 
           {envClientId ? (
             <div className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-700 ring-1 ring-slate-200">

@@ -9,6 +9,7 @@ type GoalsContextValue = {
   updateGoal: (id: string, updates: Partial<Goal>) => void
   deleteGoal: (id: string) => void
   getById: (id: string) => Goal | undefined
+  replaceAll: (goals: Goal[]) => void
 }
 
 const GoalsContext = createContext<GoalsContextValue | null>(null)
@@ -56,8 +57,15 @@ export function GoalsProvider({ children }: { children: ReactNode }) {
 
   const getById = useCallback((id: string) => goals.find((g) => g.id === id), [goals])
 
+  const replaceAll = useCallback(
+    (nextGoals: Goal[]) => {
+      persist([...nextGoals])
+    },
+    [persist],
+  )
+
   return (
-    <GoalsContext.Provider value={{ goals, addGoal, updateGoal, deleteGoal, getById }}>
+    <GoalsContext.Provider value={{ goals, addGoal, updateGoal, deleteGoal, getById, replaceAll }}>
       {children}
     </GoalsContext.Provider>
   )

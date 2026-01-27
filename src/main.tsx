@@ -6,6 +6,7 @@ import App from './App.tsx'
 import { EntriesProvider } from './state/EntriesContext'
 import { GoalsProvider } from './state/GoalsContext'
 import { AuthProvider } from './state/AuthContext'
+import { SupabaseSyncProvider } from './state/SupabaseSyncProvider'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <EntriesProvider>
           <GoalsProvider>
-            <App />
+            <SupabaseSyncProvider>
+              <App />
+            </SupabaseSyncProvider>
           </GoalsProvider>
         </EntriesProvider>
       </AuthProvider>

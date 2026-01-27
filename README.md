@@ -92,6 +92,44 @@ VITE_GOOGLE_CLIENT_ID="YOUR_CLIENT_ID.apps.googleusercontent.com"
 4. Paste your calendar ID (example family calendar: `family00142091226312618231@group.calendar.google.com`)
 5. Click **Load events**
 
+## Supabase sync (automatic, recommended)
+
+This enables **automatic cross‑device sync** (entries + goals) per Google account.
+
+### Setup
+
+1. Create a Supabase project
+2. Create a table:
+
+```sql
+create table if not exists pds_data (
+  user_id text primary key,
+  entries jsonb not null,
+  goals jsonb not null,
+  updated_at timestamptz not null
+);
+```
+
+3. Add Row Level Security policy (optional but recommended):
+
+```sql
+alter table pds_data enable row level security;
+create policy "user can access own data" on pds_data
+  for all using (auth.uid()::text = user_id)
+  with check (auth.uid()::text = user_id);
+```
+
+4. Set env vars:
+
+```bash
+VITE_SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
+VITE_SUPABASE_ANON_KEY="YOUR_ANON_KEY"
+```
+
+### Notes
+- Sign‑in uses your Google ID token to authenticate with Supabase.
+- Sync happens automatically after login and on changes.
+
 ### Build for production
 
 ```bash

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import { supabase } from '../lib/supabase'
 
 export type AuthUser = {
   sub: string
@@ -51,11 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     storeUser(next)
   }, [])
 
-  const signOut = useCallback(() => setUser(null), [setUser])
+  const signOutAll = useCallback(() => {
+    setUser(null)
+    if (supabase) supabase.auth.signOut()
+  }, [setUser])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, setUser, signOut }),
-    [user, setUser, signOut],
+    () => ({ user, setUser, signOut: signOutAll }),
+    [user, setUser, signOutAll],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
