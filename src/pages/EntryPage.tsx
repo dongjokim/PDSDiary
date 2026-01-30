@@ -57,7 +57,7 @@ function applyInferredCategories(entry: PdsEntry): PdsEntry {
   const blocks = entry.blocks
     ? entry.blocks.map((b) => {
         if (b.category) return b
-        const inferred = inferCategory(b.do ?? '')
+        const inferred = inferCategory(b.do ?? '') || inferCategory(b.plan ?? '')
         if (!inferred) return b
         changed = true
         return { ...b, category: inferred }

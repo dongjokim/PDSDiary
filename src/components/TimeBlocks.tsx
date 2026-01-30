@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type { PdsEntry } from '../types/pds'
 import { Input } from './ui'
 import { clsx } from '../lib/clsx'
@@ -26,6 +27,18 @@ export function TimeBlocks({
   blocks: Block[]
   onChange: (next: Block[]) => void
 }) {
+  useEffect(() => {
+    let changed = false
+    const next = blocks.map((b) => {
+      if (b.category) return b
+      const inferred = inferCategory(b.plan ?? '') || inferCategory(b.do ?? '')
+      if (!inferred) return b
+      changed = true
+      return { ...b, category: inferred }
+    })
+    if (changed) onChange(next)
+  }, [blocks, onChange])
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 px-4 py-3">
@@ -60,8 +73,13 @@ export function TimeBlocks({
                       value={b.plan ?? ''}
                       onChange={(e) => {
                         const v = e.target.value
+                        const inferred = b.category ? b.category : inferCategory(v)
                         onChange(
-                          blocks.map((x, i) => (i === idx ? { ...x, plan: v || undefined } : x)),
+                          blocks.map((x, i) =>
+                            i === idx
+                              ? { ...x, plan: v || undefined, category: inferred || x.category }
+                              : x,
+                          ),
                         )
                       }}
                       placeholder="Planned activity…"
