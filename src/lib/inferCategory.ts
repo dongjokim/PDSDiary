@@ -16,17 +16,16 @@ const RULES: Rule[] = [
   { category: 'project', keywords: ['project', 'work', 'build', 'code', 'dev', 'design'] },
 ]
 
-function hasKeyword(text: string, keyword: string): boolean {
-  if (keyword === '1:1') return text.includes('1:1')
-  return new RegExp(`\\b${keyword}\\b`, 'i').test(text)
-}
-
 export function inferCategory(text: string): Category | '' {
   const trimmed = text.trim()
   if (!trimmed) return ''
+  const normalized = trimmed.toLowerCase().replace(/[^a-z0-9:+\s]/g, ' ')
+  const tokens = normalized.split(/\s+/).filter(Boolean)
   for (const rule of RULES) {
-    if (rule.keywords.some((k) => hasKeyword(trimmed.toLowerCase(), k))) {
-      return rule.category
+    for (const keyword of rule.keywords) {
+      if (keyword === '1:1' && normalized.includes('1:1')) return rule.category
+      if (tokens.includes(keyword)) return rule.category
+      if (keyword.length >= 5 && normalized.includes(keyword)) return rule.category
     }
   }
   return ''

@@ -138,6 +138,19 @@ export function TimeBlocks({
                             ),
                           )
                         }}
+                        onBlur={(e) => {
+                          const v = e.target.value
+                          if (b.category) return
+                          const inferred = inferCategory(v)
+                          if (!inferred) return
+                          onChange(
+                            blocks.map((x, i) =>
+                              i === idx
+                                ? { ...x, category: inferred }
+                                : x,
+                            ),
+                          )
+                        }}
                         placeholder="Comment…"
                         className={clsx(b.do ? '' : 'placeholder:text-slate-300')}
                       />

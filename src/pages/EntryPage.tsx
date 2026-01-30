@@ -315,6 +315,17 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
                             }
                             setDraft((d) => ({ ...d, doItems: newItems, doItemCategories: categories }))
                           }}
+                          onBlur={(e) => {
+                            const value = e.target.value
+                            const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
+                            if (!categories[index]) {
+                              const inferred = inferCategory(value)
+                              if (inferred) {
+                                categories[index] = inferred
+                                setDraft((d) => ({ ...d, doItemCategories: categories }))
+                              }
+                            }
+                          }}
                           placeholder={`What did you do?`}
                           />
                         </div>
