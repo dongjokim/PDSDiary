@@ -40,6 +40,38 @@ function tagsToString(tags: string[]): string {
   return tags.join(', ')
 }
 
+function applyInferredCategories(entry: PdsEntry): PdsEntry {
+  let changed = false
+  const doItems = entry.doItems ?? []
+  const doItemCategories = (entry.doItemCategories ?? ['', '', '']) as DoCategory[]
+
+  doItems.slice(0, 3).forEach((item, idx) => {
+    if (doItemCategories[idx]) return
+    const inferred = inferCategory(item ?? '')
+    if (inferred) {
+      doItemCategories[idx] = inferred
+      changed = true
+    }
+  })
+
+  const blocks = entry.blocks
+    ? entry.blocks.map((b) => {
+        if (b.category) return b
+        const inferred = inferCategory(b.do ?? '')
+        if (!inferred) return b
+        changed = true
+        return { ...b, category: inferred }
+      })
+    : undefined
+
+  if (!changed) return entry
+  return {
+    ...entry,
+    doItemCategories,
+    blocks,
+  }
+}
+
 export default function EntryPage({ entryId, initialDate }: { entryId?: string; initialDate?: string }) {
   const nav = useNavigate()
   const id = entryId
@@ -78,8 +110,10 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
 
   const onSave = () => {
     const now = new Date().toISOString()
+    const withCategories = applyInferredCategories(draft)
     upsert({
       ...draft,
+      ...withCategories,
       // ensure createdAt remains stable for existing entries
       createdAt: isNew ? now : draft.createdAt,
       updatedAt: now,
