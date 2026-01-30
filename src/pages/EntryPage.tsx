@@ -13,8 +13,9 @@ import { toLocalDateInputValue } from '../lib/time'
 import { useEntries } from '../state/EntriesContext'
 import { clsx } from '../lib/clsx'
 import { categoryColorClass } from '../lib/categoryColors'
+import { inferCategory } from '../lib/inferCategory'
 
-type DoCategory = 'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | ''
+type DoCategory = 'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | 'sleep' | 'food' | 'entertainment' | ''
 
 function parseTags(raw: string): string[] {
   const normalized = raw.replace(/#/g, ' ')
@@ -262,6 +263,9 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
                                   <option value="family">Family</option>
                                   <option value="meeting">Meeting</option>
                                   <option value="wellbeing">Well-being</option>
+                                  <option value="sleep">Sleep</option>
+                                  <option value="food">Food</option>
+                                  <option value="entertainment">Entertainment</option>
                                 </select>
                                 {currentCategory === 'project' ? (
                                   <Input
@@ -299,9 +303,17 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
                           <Input
                           value={item}
                           onChange={(e) => {
+                            const value = e.target.value
                             const newItems = [...(draft.doItems ?? ['', '', ''])]
-                            newItems[index] = e.target.value
-                            setDraft((d) => ({ ...d, doItems: newItems }))
+                            newItems[index] = value
+                            const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
+                            if (!categories[index]) {
+                              const inferred = inferCategory(value)
+                              if (inferred) {
+                                categories[index] = inferred
+                              }
+                            }
+                            setDraft((d) => ({ ...d, doItems: newItems, doItemCategories: categories }))
                           }}
                           placeholder={`What did you do?`}
                           />

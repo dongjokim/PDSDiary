@@ -9,7 +9,7 @@ export type PdsEntry = {
   /** 3 action items for the Do section */
   doItems?: string[]
   /** Optional category per Do item (same length as doItems) */
-  doItemCategories?: Array<'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | ''>
+  doItemCategories?: Array<'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | 'sleep' | 'food' | 'entertainment' | ''>
   /** Optional project tag per Do item (only when category = project) */
   doItemProjectTags?: string[]
   see: string
@@ -45,7 +45,7 @@ export type PdsEntry = {
     /** Optional comment for what you actually did */
     do?: string
     /** Optional category for the hour */
-    category?: 'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | ''
+    category?: 'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | 'sleep' | 'food' | 'entertainment' | ''
     /** Optional project tag for the hour (only when category = project) */
     projectTag?: string
   }>

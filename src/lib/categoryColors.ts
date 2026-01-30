@@ -1,4 +1,4 @@
-export type Category = 'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | ''
+export type Category = 'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | 'sleep' | 'food' | 'entertainment' | ''
 export type ProjectColor = 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'teal'
 
 const PROJECT_PALETTE: Record<ProjectColor, string> = {
@@ -31,6 +31,9 @@ export function categoryColorClass(category?: Category, projectTag?: string): st
   if (category === 'family') return 'bg-amber-500'
   if (category === 'meeting') return 'bg-sky-500'
   if (category === 'wellbeing') return 'bg-indigo-500'
+  if (category === 'sleep') return 'bg-violet-500'
+  if (category === 'food') return 'bg-orange-500'
+  if (category === 'entertainment') return 'bg-fuchsia-500'
   return 'bg-slate-300'
 }
 

@@ -143,11 +143,11 @@ function coerceBookMonth(raw: unknown): PdsEntry['bookMonth'] | undefined {
   }
 }
 
-const CATEGORY_VALUES = new Set(['project', 'exercise', 'family', 'meeting', 'wellbeing', ''] as const)
+const CATEGORY_VALUES = new Set(['project', 'exercise', 'family', 'meeting', 'wellbeing', 'sleep', 'food', 'entertainment', ''] as const)
 
 function coerceDoItemCategories(raw: unknown): PdsEntry['doItemCategories'] | undefined {
   if (!Array.isArray(raw)) return undefined
-  const out: Array<'project' | 'exercise' | 'family' | 'meeting' | ''> = []
+  const out: Array<'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | 'sleep' | 'food' | 'entertainment' | ''> = []
   for (const v of raw.slice(0, 3)) {
     if (typeof v === 'string' && CATEGORY_VALUES.has(v as any)) {
       out.push(v as any)

@@ -3,6 +3,7 @@ import { Input } from './ui'
 import { clsx } from '../lib/clsx'
 import { TickBar } from './TickBar'
 import { categoryColorClass } from '../lib/categoryColors'
+import { inferCategory } from '../lib/inferCategory'
 
 type Block = NonNullable<PdsEntry['blocks']>[number]
 
@@ -13,6 +14,9 @@ const CATEGORY_OPTIONS = [
   { value: 'family', label: 'Family' },
   { value: 'meeting', label: 'Meeting' },
   { value: 'wellbeing', label: 'Well-being' },
+  { value: 'sleep', label: 'Sleep' },
+  { value: 'food', label: 'Food' },
+  { value: 'entertainment', label: 'Entertainment' },
 ] as const
 
 export function TimeBlocks({
@@ -125,7 +129,14 @@ export function TimeBlocks({
                         value={b.do ?? ''}
                         onChange={(e) => {
                           const v = e.target.value
-                          onChange(blocks.map((x, i) => (i === idx ? { ...x, do: v || undefined } : x)))
+                          const inferred = b.category ? b.category : inferCategory(v)
+                          onChange(
+                            blocks.map((x, i) =>
+                              i === idx
+                                ? { ...x, do: v || undefined, category: inferred || x.category }
+                                : x,
+                            ),
+                          )
                         }}
                         placeholder="Comment…"
                         className={clsx(b.do ? '' : 'placeholder:text-slate-300')}
