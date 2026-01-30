@@ -111,8 +111,8 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
   const onSave = () => {
     const now = new Date().toISOString()
     const withCategories = applyInferredCategories(draft)
+    setDraft(withCategories)
     upsert({
-      ...draft,
       ...withCategories,
       // ensure createdAt remains stable for existing entries
       createdAt: isNew ? now : draft.createdAt,
