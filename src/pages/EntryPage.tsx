@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Header } from '../components/Header'
 import { Button, Input, Textarea } from '../components/ui'
@@ -107,6 +107,13 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
   const [status, setStatus] = useState<string | null>(null)
 
   const isNew = !id
+
+  useEffect(() => {
+    const next = applyInferredCategories(draft)
+    if (next !== draft) {
+      setDraft(next)
+    }
+  }, [draft.doItems, draft.blocks])
 
   const onSave = () => {
     const now = new Date().toISOString()
