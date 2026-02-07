@@ -51,8 +51,8 @@ function addDays(date: Date, days: number): Date {
   return d
 }
 
-function formatWeekLabel(start: Date): string {
-  const end = addDays(start, 6)
+function formatRangeLabel(start: Date, days: number): string {
+  const end = addDays(start, days - 1)
   return `${start.toLocaleDateString()} – ${end.toLocaleDateString()}`
 }
 
@@ -115,18 +115,19 @@ export default function WeekPage() {
   const [anchorDate, setAnchorDate] = useState<Date>(() => new Date())
   const [drafts, setDrafts] = useState<Record<string, PdsEntry>>({})
   const [statusByDate, setStatusByDate] = useState<Record<string, string>>({})
+  const rangeDays = 3
 
-  const weekStart = useMemo(() => startOfWeek(anchorDate), [anchorDate])
-  const weekDates = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => toLocalDateInputValue(addDays(weekStart, i))),
-    [weekStart],
+  const rangeStart = useMemo(() => startOfWeek(anchorDate), [anchorDate])
+  const rangeDates = useMemo(
+    () => Array.from({ length: rangeDays }, (_, i) => toLocalDateInputValue(addDays(rangeStart, i))),
+    [rangeStart, rangeDays],
   )
   const entriesByDate = useMemo(() => new Map(entries.map((e) => [e.date, e])), [entries])
 
   useEffect(() => {
     setDrafts((prev) => {
       const next = { ...prev }
-      weekDates.forEach((date) => {
+      rangeDates.forEach((date) => {
         const existing = entriesByDate.get(date)
         if (!next[date] || (existing && next[date].id !== existing.id)) {
           next[date] = buildDraftForDate(date, existing, createDraft)
@@ -134,7 +135,7 @@ export default function WeekPage() {
       })
       return next
     })
-  }, [weekDates, entriesByDate, createDraft])
+  }, [rangeDates, entriesByDate, createDraft])
 
   const tagSuggestions = useMemo(
     () => Array.from(new Set(entries.flatMap((e) => e.tags).map((t) => t.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
@@ -164,13 +165,13 @@ export default function WeekPage() {
   }
 
   const saveAll = () => {
-    weekDates.forEach((d) => saveDay(d))
+    rangeDates.forEach((d) => saveDay(d))
   }
 
   return (
     <div className="min-h-full">
       <Header
-        title="Week view"
+        title="3-day view"
         right={
           <>
             <Link to="/">
@@ -179,11 +180,11 @@ export default function WeekPage() {
             <Button variant="secondary" onClick={() => setAnchorDate(new Date())}>
               Today
             </Button>
-            <Button variant="secondary" onClick={() => setAnchorDate(addDays(anchorDate, -7))}>
-              ← Week
+            <Button variant="secondary" onClick={() => setAnchorDate(addDays(anchorDate, -rangeDays))}>
+              ← 3 days
             </Button>
-            <Button variant="secondary" onClick={() => setAnchorDate(addDays(anchorDate, 7))}>
-              Week →
+            <Button variant="secondary" onClick={() => setAnchorDate(addDays(anchorDate, rangeDays))}>
+              3 days →
             </Button>
             <Button onClick={saveAll}>Save all</Button>
           </>
@@ -191,17 +192,18 @@ export default function WeekPage() {
       />
 
       <main className="mx-auto w-full max-w-none px-4 py-6 sm:px-6">
-        <div className="mb-4 text-sm font-semibold text-slate-700">{formatWeekLabel(weekStart)}</div>
-        <div className="overflow-x-auto pb-2">
-          <div className="grid w-max grid-cols-7 gap-4">
-            {weekDates.map((date) => {
+        <div className="mb-4 text-sm font-semibold text-slate-700">
+          {formatRangeLabel(rangeStart, rangeDays)}
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {rangeDates.map((date) => {
               const draft = drafts[date]
               if (!draft) return null
               const existing = entriesByDate.get(date)
               const link = existing ? `/entry/${existing.id}` : `/new?date=${date}`
               const weekday = new Date(date).toLocaleDateString(undefined, { weekday: 'long' })
               return (
-                <section key={date} className="min-w-[520px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <section key={date} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="text-sm font-semibold text-slate-900">
@@ -376,8 +378,7 @@ export default function WeekPage() {
                   </div>
                 </section>
               )
-            })}
-          </div>
+          })}
         </div>
       </main>
     </div>
