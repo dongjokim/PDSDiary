@@ -10,12 +10,9 @@ import type { PdsEntry } from '../types/pds'
 import { makeDefaultBlocks } from '../lib/blocks'
 import { applyGoogleEventsToHourlyPlan } from '../lib/applyCalendarToPlan'
 import { toLocalDateInputValue } from '../lib/time'
-import { useEntries } from '../state/EntriesContext'
-import { clsx } from '../lib/clsx'
-import { categoryColorClass } from '../lib/categoryColors'
 import { inferCategory } from '../lib/inferCategory'
+import { useEntries } from '../state/EntriesContext'
 
-type DoCategory = 'project' | 'exercise' | 'family' | 'meeting' | 'wellbeing' | 'sleep' | 'food' | 'entertainment' | ''
 
 function parseTags(raw: string): string[] {
   const normalized = raw.replace(/#/g, ' ')
@@ -43,7 +40,7 @@ function tagsToString(tags: string[]): string {
 function applyInferredCategories(entry: PdsEntry): PdsEntry {
   let changed = false
   const doItems = entry.doItems ?? []
-  const doItemCategories = (entry.doItemCategories ?? ['', '', '']) as DoCategory[]
+  const doItemCategories = (entry.doItemCategories ?? ['', '', '']) as NonNullable<PdsEntry['doItemCategories']>
 
   doItems.slice(0, 3).forEach((item, idx) => {
     if (doItemCategories[idx]) return
@@ -270,108 +267,13 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
 
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="text-sm font-semibold text-slate-900">Do</div>
-                  <div className="mt-1 text-xs text-slate-600">What did you actually do? (3 items)</div>
-                  <div className="mt-3 space-y-2">
-                    {(draft.doItems ?? ['', '', '']).slice(0, 3).map((item, index) => (
-                      <div key={index} className="flex flex-col gap-2 rounded-xl bg-slate-50 p-2 ring-1 ring-slate-200">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-                          {index + 1}
-                        </div>
-                          <div className="text-xs font-semibold text-slate-700">Do</div>
-                      </div>
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                            const currentCategory = categories[index] ?? ''
-                            return (
-                              <>
-                                <select
-                                  value={currentCategory}
-                                  onChange={(e) => {
-                                    const next = [...categories]
-                                    const v = e.target.value as DoCategory
-                                    next[index] = v
-                                    const tagNext = [...(draft.doItemProjectTags ?? ['', '', ''])]
-                                    tagNext[index] = v === 'project' ? tagNext[index] : ''
-                                    setDraft((d) => ({ ...d, doItemCategories: next, doItemProjectTags: tagNext }))
-                                  }}
-                                  className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700"
-                                >
-                                  <option value="">—</option>
-                                  <option value="project">Project</option>
-                                  <option value="exercise">Exercise</option>
-                                  <option value="family">Family</option>
-                                  <option value="meeting">Meeting</option>
-                                  <option value="wellbeing">Well-being</option>
-                                  <option value="sleep">Sleep</option>
-                                  <option value="food">Food</option>
-                                  <option value="entertainment">Entertainment</option>
-                                </select>
-                                {currentCategory === 'project' ? (
-                                  <Input
-                                    value={(draft.doItemProjectTags ?? ['', '', ''])[index] ?? ''}
-                                    onChange={(e) => {
-                                      const tagNext = [...(draft.doItemProjectTags ?? ['', '', ''])]
-                                      tagNext[index] = e.target.value
-                                      setDraft((d) => ({ ...d, doItemProjectTags: tagNext }))
-                                    }}
-                                    placeholder="Project tag…"
-                                    className="h-8"
-                                  />
-                                ) : null}
-                              </>
-                            )
-                          })()}
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                            const currentCategory = categories[index] ?? ''
-                            return currentCategory ? (
-                              <span
-                                className={clsx(
-                                  'h-3 w-3 rounded-full',
-                                  categoryColorClass(
-                                    currentCategory,
-                                    (draft.doItemProjectTags ?? ['', '', ''])[index] ?? '',
-                                  ),
-                                )}
-                              />
-                            ) : null
-                          })()}
-                          <Input
-                          value={item}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            const newItems = [...(draft.doItems ?? ['', '', ''])]
-                            newItems[index] = value
-                            const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                            if (!categories[index]) {
-                              const inferred = inferCategory(value)
-                              if (inferred) {
-                                categories[index] = inferred
-                              }
-                            }
-                            setDraft((d) => ({ ...d, doItems: newItems, doItemCategories: categories }))
-                          }}
-                          onBlur={(e) => {
-                            const value = e.target.value
-                            const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                            if (!categories[index]) {
-                              const inferred = inferCategory(value)
-                              if (inferred) {
-                                categories[index] = inferred
-                                setDraft((d) => ({ ...d, doItemCategories: categories }))
-                              }
-                            }
-                          }}
-                          placeholder={`What did you do?`}
-                          />
-                        </div>
-                    </div>
-                    ))}
+                  <div className="mt-1 text-xs text-slate-600">What did you actually do?</div>
+                  <div className="mt-3">
+                    <Textarea
+                      value={draft.do}
+                      onChange={(e) => setDraft((d) => ({ ...d, do: e.target.value }))}
+                      placeholder="What did you do?"
+                    />
                   </div>
                 </section>
 

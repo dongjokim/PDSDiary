@@ -34,15 +34,6 @@ function tagsToString(tags: string[]): string {
   return tags.join(', ')
 }
 
-function startOfWeek(date: Date): Date {
-  const d = new Date(date)
-  const day = d.getDay() // 0=Sun
-  const diff = day === 0 ? -6 : 1 - day // Monday start
-  d.setDate(d.getDate() + diff)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
 function addDays(date: Date, days: number): Date {
   const d = new Date(date)
   d.setDate(d.getDate() + days)
@@ -115,7 +106,11 @@ export default function WeekPage() {
   const [statusByDate, setStatusByDate] = useState<Record<string, string>>({})
   const rangeDays = 3
 
-  const rangeStart = useMemo(() => startOfWeek(anchorDate), [anchorDate])
+  const rangeStart = useMemo(() => {
+    const d = new Date(anchorDate)
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [anchorDate])
   const rangeDates = useMemo(
     () => Array.from({ length: rangeDays }, (_, i) => toLocalDateInputValue(addDays(rangeStart, i))),
     [rangeStart, rangeDays],
