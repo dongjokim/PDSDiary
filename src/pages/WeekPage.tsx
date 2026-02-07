@@ -8,8 +8,6 @@ import type { PdsEntry } from '../types/pds'
 import { makeDefaultBlocks } from '../lib/blocks'
 import { toLocalDateInputValue } from '../lib/time'
 import { inferCategory } from '../lib/inferCategory'
-import { clsx } from '../lib/clsx'
-import { categoryColorClass } from '../lib/categoryColors'
 import { useEntries } from '../state/EntriesContext'
 
 type DoCategory = NonNullable<PdsEntry['doItemCategories']>[number]
@@ -263,100 +261,16 @@ export default function WeekPage() {
                       </div>
                     </section>
 
-                    <section className="rounded-xl border border-slate-200 bg-white p-3">
-                      <div className="text-xs font-semibold text-slate-700">Do (3 items)</div>
-                      <div className="mt-2 space-y-2">
-                        {(draft.doItems ?? ['', '', '']).slice(0, 3).map((item, index) => (
-                          <div key={index} className="flex flex-col gap-2 rounded-lg bg-slate-50 p-2 ring-1 ring-slate-200">
-                            <div className="flex items-center gap-2">
-                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-                                {index + 1}
-                              </div>
-                              <div className="text-xs font-semibold text-slate-700">Do</div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {(() => {
-                                const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                                const currentCategory = categories[index] ?? ''
-                                return (
-                                  <>
-                                    <select
-                                      value={currentCategory}
-                                      onChange={(e) => {
-                                        const next = [...categories]
-                                        const v = e.target.value as DoCategory
-                                        next[index] = v
-                                        const tagNext = [...(draft.doItemProjectTags ?? ['', '', ''])]
-                                        tagNext[index] = v === 'project' ? tagNext[index] : ''
-                                        updateDraft(date, (d) => ({ ...d, doItemCategories: next, doItemProjectTags: tagNext }))
-                                      }}
-                                      className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700"
-                                    >
-                                      <option value="">—</option>
-                                      <option value="project">Project</option>
-                                      <option value="exercise">Exercise</option>
-                                      <option value="family">Family</option>
-                                      <option value="meeting">Meeting</option>
-                                      <option value="wellbeing">Well-being</option>
-                                      <option value="sleep">Sleep</option>
-                                      <option value="food">Food</option>
-                                      <option value="entertainment">Entertainment</option>
-                                    </select>
-                                    {currentCategory === 'project' ? (
-                                      <Input
-                                        value={(draft.doItemProjectTags ?? ['', '', ''])[index] ?? ''}
-                                        onChange={(e) => {
-                                          const tagNext = [...(draft.doItemProjectTags ?? ['', '', ''])]
-                                          tagNext[index] = e.target.value
-                                          updateDraft(date, (d) => ({ ...d, doItemProjectTags: tagNext }))
-                                        }}
-                                        placeholder="Project tag…"
-                                        className="h-8"
-                                      />
-                                    ) : null}
-                                  </>
-                                )
-                              })()}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {(() => {
-                                const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                                const currentCategory = categories[index] ?? ''
-                                return currentCategory ? (
-                                  <span
-                                    className={clsx(
-                                      'h-3 w-3 rounded-full',
-                                      categoryColorClass(
-                                        currentCategory,
-                                        (draft.doItemProjectTags ?? ['', '', ''])[index] ?? '',
-                                      ),
-                                    )}
-                                  />
-                                ) : null
-                              })()}
-                              <Input
-                                value={item}
-                                onChange={(e) => {
-                                  const value = e.target.value
-                                  const newItems = [...(draft.doItems ?? ['', '', ''])]
-                                  newItems[index] = value
-                                  const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                                  if (!categories[index]) {
-                                    const inferred = inferCategory(value)
-                                    if (inferred) {
-                                      categories[index] = inferred
-                                    }
-                                  }
-                                  updateDraft(date, (d) => ({ ...d, doItems: newItems, doItemCategories: categories }))
-                                }}
-                                placeholder="What did you do?"
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
+                  <section className="rounded-xl border border-slate-200 bg-white p-3">
+                    <div className="text-xs font-semibold text-slate-700">Do</div>
+                    <div className="mt-2">
+                      <Textarea
+                        value={draft.do}
+                        onChange={(e) => updateDraft(date, (d) => ({ ...d, do: e.target.value }))}
+                        placeholder="What did you do?"
+                      />
+                    </div>
+                  </section>
 
                     <section className="rounded-xl border border-slate-200 bg-white p-3">
                       <div className="text-xs font-semibold text-slate-700">See</div>
