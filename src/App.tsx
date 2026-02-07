@@ -4,6 +4,7 @@ import EntryRoute from './pages/EntryRoute'
 import YearPage from './pages/YearPage'
 import GoalsPage from './pages/GoalsPage'
 import BookMonthRoute from './pages/BookMonthRoute'
+import WeekPage from './pages/WeekPage'
 import NotFoundPage from './pages/NotFoundPage'
 import LoginPage from './pages/LoginPage'
 import { useAuth } from './state/AuthContext'
@@ -16,6 +17,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/week" element={<WeekPage />} />
       <Route path="/year" element={<YearPage />} />
       <Route path="/goals" element={<GoalsPage />} />
       <Route path="/book/month" element={<BookMonthRoute />} />

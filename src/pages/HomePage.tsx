@@ -145,6 +145,9 @@ export default function HomePage() {
             <Link to="/year">
               <Button variant="secondary">Year Overview</Button>
             </Link>
+            <Link to="/week">
+              <Button variant="secondary">Week View</Button>
+            </Link>
             <Link to={`/book/month?year=${selectedYear}&month=${selectedMonth}`}>
               <Button variant="secondary">Book Month</Button>
             </Link>
