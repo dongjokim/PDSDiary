@@ -190,192 +190,194 @@ export default function WeekPage() {
         }
       />
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+      <main className="mx-auto w-full max-w-none px-4 py-6 sm:px-6">
         <div className="mb-4 text-sm font-semibold text-slate-700">{formatWeekLabel(weekStart)}</div>
-        <div className="flex flex-col gap-6">
-          {weekDates.map((date) => {
-            const draft = drafts[date]
-            if (!draft) return null
-            const existing = entriesByDate.get(date)
-            const link = existing ? `/entry/${existing.id}` : `/new?date=${date}`
-            const weekday = new Date(date).toLocaleDateString(undefined, { weekday: 'long' })
-            return (
-              <section key={date} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="text-sm font-semibold text-slate-900">
-                      {weekday} • {date}
+        <div className="overflow-x-auto pb-2">
+          <div className="grid w-max grid-cols-7 gap-4">
+            {weekDates.map((date) => {
+              const draft = drafts[date]
+              if (!draft) return null
+              const existing = entriesByDate.get(date)
+              const link = existing ? `/entry/${existing.id}` : `/new?date=${date}`
+              const weekday = new Date(date).toLocaleDateString(undefined, { weekday: 'long' })
+              return (
+                <section key={date} className="min-w-[520px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">
+                        {weekday} • {date}
+                      </div>
+                      <div className="mt-1 text-xs text-slate-600">
+                        {statusByDate[date] ?? ''}
+                      </div>
                     </div>
-                    <div className="mt-1 text-xs text-slate-600">
-                      {statusByDate[date] ?? ''}
+                    <div className="flex gap-2">
+                      <Link to={link}>
+                        <Button variant="secondary" size="sm">Open</Button>
+                      </Link>
+                      <Button size="sm" onClick={() => saveDay(date)}>Save</Button>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Link to={link}>
-                      <Button variant="secondary" size="sm">Open</Button>
-                    </Link>
-                    <Button size="sm" onClick={() => saveDay(date)}>Save</Button>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <div className="text-xs font-semibold text-slate-700">Title</div>
+                      <div className="mt-1">
+                        <Input
+                          value={draft.title}
+                          onChange={(e) => updateDraft(date, (d) => ({ ...d, title: e.target.value }))}
+                          placeholder="What is this entry about?"
+                        />
+                      </div>
+                    </label>
+                    <label className="block">
+                      <div className="text-xs font-semibold text-slate-700">Tags</div>
+                      <div className="mt-1">
+                        <Input
+                          value={tagsToString(draft.tags)}
+                          onChange={(e) => updateDraft(date, (d) => ({ ...d, tags: parseTags(e.target.value) }))}
+                          placeholder="comma or space separated tags"
+                        />
+                      </div>
+                      <div className="mt-2">
+                        <TagPicker
+                          value={draft.tags}
+                          suggestions={tagSuggestions}
+                          onChange={(next) => updateDraft(date, (d) => ({ ...d, tags: next }))}
+                        />
+                      </div>
+                    </label>
                   </div>
-                </div>
 
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <label className="block">
-                    <div className="text-xs font-semibold text-slate-700">Title</div>
-                    <div className="mt-1">
-                      <Input
-                        value={draft.title}
-                        onChange={(e) => updateDraft(date, (d) => ({ ...d, title: e.target.value }))}
-                        placeholder="What is this entry about?"
-                      />
-                    </div>
-                  </label>
-                  <label className="block">
-                    <div className="text-xs font-semibold text-slate-700">Tags</div>
-                    <div className="mt-1">
-                      <Input
-                        value={tagsToString(draft.tags)}
-                        onChange={(e) => updateDraft(date, (d) => ({ ...d, tags: parseTags(e.target.value) }))}
-                        placeholder="comma or space separated tags"
-                      />
-                    </div>
-                    <div className="mt-2">
-                      <TagPicker
-                        value={draft.tags}
-                        suggestions={tagSuggestions}
-                        onChange={(next) => updateDraft(date, (d) => ({ ...d, tags: next }))}
-                      />
-                    </div>
-                  </label>
-                </div>
+                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <section className="rounded-xl border border-slate-200 bg-white p-3">
+                      <div className="text-xs font-semibold text-slate-700">Plan</div>
+                      <div className="mt-2">
+                        <Textarea
+                          value={draft.plan}
+                          onChange={(e) => updateDraft(date, (d) => ({ ...d, plan: e.target.value }))}
+                          placeholder="What do you intend to do?"
+                        />
+                      </div>
+                    </section>
 
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <section className="rounded-xl border border-slate-200 bg-white p-3">
-                    <div className="text-xs font-semibold text-slate-700">Plan</div>
-                    <div className="mt-2">
-                      <Textarea
-                        value={draft.plan}
-                        onChange={(e) => updateDraft(date, (d) => ({ ...d, plan: e.target.value }))}
-                        placeholder="What do you intend to do?"
-                      />
-                    </div>
-                  </section>
-
-                  <section className="rounded-xl border border-slate-200 bg-white p-3">
-                    <div className="text-xs font-semibold text-slate-700">Do (3 items)</div>
-                    <div className="mt-2 space-y-2">
-                      {(draft.doItems ?? ['', '', '']).slice(0, 3).map((item, index) => (
-                        <div key={index} className="flex flex-col gap-2 rounded-lg bg-slate-50 p-2 ring-1 ring-slate-200">
-                          <div className="flex items-center gap-2">
-                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-                              {index + 1}
+                    <section className="rounded-xl border border-slate-200 bg-white p-3">
+                      <div className="text-xs font-semibold text-slate-700">Do (3 items)</div>
+                      <div className="mt-2 space-y-2">
+                        {(draft.doItems ?? ['', '', '']).slice(0, 3).map((item, index) => (
+                          <div key={index} className="flex flex-col gap-2 rounded-lg bg-slate-50 p-2 ring-1 ring-slate-200">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                                {index + 1}
+                              </div>
+                              <div className="text-xs font-semibold text-slate-700">Do</div>
                             </div>
-                            <div className="text-xs font-semibold text-slate-700">Do</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {(() => {
-                              const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                              const currentCategory = categories[index] ?? ''
-                              return (
-                                <>
-                                  <select
-                                    value={currentCategory}
-                                    onChange={(e) => {
-                                      const next = [...categories]
-                                      const v = e.target.value as DoCategory
-                                      next[index] = v
-                                      const tagNext = [...(draft.doItemProjectTags ?? ['', '', ''])]
-                                      tagNext[index] = v === 'project' ? tagNext[index] : ''
-                                      updateDraft(date, (d) => ({ ...d, doItemCategories: next, doItemProjectTags: tagNext }))
-                                    }}
-                                    className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700"
-                                  >
-                                    <option value="">—</option>
-                                    <option value="project">Project</option>
-                                    <option value="exercise">Exercise</option>
-                                    <option value="family">Family</option>
-                                    <option value="meeting">Meeting</option>
-                                    <option value="wellbeing">Well-being</option>
-                                    <option value="sleep">Sleep</option>
-                                    <option value="food">Food</option>
-                                    <option value="entertainment">Entertainment</option>
-                                  </select>
-                                  {currentCategory === 'project' ? (
-                                    <Input
-                                      value={(draft.doItemProjectTags ?? ['', '', ''])[index] ?? ''}
-                                      onChange={(e) => {
-                                        const tagNext = [...(draft.doItemProjectTags ?? ['', '', ''])]
-                                        tagNext[index] = e.target.value
-                                        updateDraft(date, (d) => ({ ...d, doItemProjectTags: tagNext }))
-                                      }}
-                                      placeholder="Project tag…"
-                                      className="h-8"
-                                    />
-                                  ) : null}
-                                </>
-                              )
-                            })()}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {(() => {
-                              const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                              const currentCategory = categories[index] ?? ''
-                              return currentCategory ? (
-                                <span
-                                  className={clsx(
-                                    'h-3 w-3 rounded-full',
-                                    categoryColorClass(
-                                      currentCategory,
-                                      (draft.doItemProjectTags ?? ['', '', ''])[index] ?? '',
-                                    ),
-                                  )}
-                                />
-                              ) : null
-                            })()}
-                            <Input
-                              value={item}
-                              onChange={(e) => {
-                                const value = e.target.value
-                                const newItems = [...(draft.doItems ?? ['', '', ''])]
-                                newItems[index] = value
+                            <div className="flex items-center gap-2">
+                              {(() => {
                                 const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
-                                if (!categories[index]) {
-                                  const inferred = inferCategory(value)
-                                  if (inferred) {
-                                    categories[index] = inferred
+                                const currentCategory = categories[index] ?? ''
+                                return (
+                                  <>
+                                    <select
+                                      value={currentCategory}
+                                      onChange={(e) => {
+                                        const next = [...categories]
+                                        const v = e.target.value as DoCategory
+                                        next[index] = v
+                                        const tagNext = [...(draft.doItemProjectTags ?? ['', '', ''])]
+                                        tagNext[index] = v === 'project' ? tagNext[index] : ''
+                                        updateDraft(date, (d) => ({ ...d, doItemCategories: next, doItemProjectTags: tagNext }))
+                                      }}
+                                      className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700"
+                                    >
+                                      <option value="">—</option>
+                                      <option value="project">Project</option>
+                                      <option value="exercise">Exercise</option>
+                                      <option value="family">Family</option>
+                                      <option value="meeting">Meeting</option>
+                                      <option value="wellbeing">Well-being</option>
+                                      <option value="sleep">Sleep</option>
+                                      <option value="food">Food</option>
+                                      <option value="entertainment">Entertainment</option>
+                                    </select>
+                                    {currentCategory === 'project' ? (
+                                      <Input
+                                        value={(draft.doItemProjectTags ?? ['', '', ''])[index] ?? ''}
+                                        onChange={(e) => {
+                                          const tagNext = [...(draft.doItemProjectTags ?? ['', '', ''])]
+                                          tagNext[index] = e.target.value
+                                          updateDraft(date, (d) => ({ ...d, doItemProjectTags: tagNext }))
+                                        }}
+                                        placeholder="Project tag…"
+                                        className="h-8"
+                                      />
+                                    ) : null}
+                                  </>
+                                )
+                              })()}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {(() => {
+                                const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
+                                const currentCategory = categories[index] ?? ''
+                                return currentCategory ? (
+                                  <span
+                                    className={clsx(
+                                      'h-3 w-3 rounded-full',
+                                      categoryColorClass(
+                                        currentCategory,
+                                        (draft.doItemProjectTags ?? ['', '', ''])[index] ?? '',
+                                      ),
+                                    )}
+                                  />
+                                ) : null
+                              })()}
+                              <Input
+                                value={item}
+                                onChange={(e) => {
+                                  const value = e.target.value
+                                  const newItems = [...(draft.doItems ?? ['', '', ''])]
+                                  newItems[index] = value
+                                  const categories = (draft.doItemCategories ?? ['', '', '']) as DoCategory[]
+                                  if (!categories[index]) {
+                                    const inferred = inferCategory(value)
+                                    if (inferred) {
+                                      categories[index] = inferred
+                                    }
                                   }
-                                }
-                                updateDraft(date, (d) => ({ ...d, doItems: newItems, doItemCategories: categories }))
-                              }}
-                              placeholder="What did you do?"
-                            />
+                                  updateDraft(date, (d) => ({ ...d, doItems: newItems, doItemCategories: categories }))
+                                }}
+                                placeholder="What did you do?"
+                              />
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
+                        ))}
+                      </div>
+                    </section>
 
-                  <section className="rounded-xl border border-slate-200 bg-white p-3">
-                    <div className="text-xs font-semibold text-slate-700">See</div>
-                    <div className="mt-2">
-                      <Textarea
-                        value={draft.see}
-                        onChange={(e) => updateDraft(date, (d) => ({ ...d, see: e.target.value }))}
-                        placeholder="What did you observe/learn?"
-                      />
-                    </div>
-                  </section>
-                </div>
+                    <section className="rounded-xl border border-slate-200 bg-white p-3">
+                      <div className="text-xs font-semibold text-slate-700">See</div>
+                      <div className="mt-2">
+                        <Textarea
+                          value={draft.see}
+                          onChange={(e) => updateDraft(date, (d) => ({ ...d, see: e.target.value }))}
+                          placeholder="What did you observe/learn?"
+                        />
+                      </div>
+                    </section>
+                  </div>
 
-                <div className="mt-4">
-                  <TimeBlocks
-                    blocks={draft.blocks ?? makeDefaultBlocks()}
-                    onChange={(next) => updateDraft(date, (d) => ({ ...d, blocks: next }))}
-                  />
-                </div>
-              </section>
-            )
-          })}
+                  <div className="mt-4">
+                    <TimeBlocks
+                      blocks={draft.blocks ?? makeDefaultBlocks()}
+                      onChange={(next) => updateDraft(date, (d) => ({ ...d, blocks: next }))}
+                    />
+                  </div>
+                </section>
+              )
+            })}
+          </div>
         </div>
       </main>
     </div>
