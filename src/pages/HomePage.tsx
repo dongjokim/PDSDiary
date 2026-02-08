@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import type { ChangeEventHandler } from 'react'
 import { Link } from 'react-router-dom'
 import { Header } from '../components/Header'
-import { Badge, Button } from '../components/ui'
+import { Badge, Button, Input } from '../components/ui'
 import { Calendar } from '../components/Calendar'
 import type { PdsEntry } from '../types/pds'
 import { coerceImportedExport, makeExport } from '../lib/storage'
@@ -50,6 +50,25 @@ function applySleepPlanToBlocks(blocks: NonNullable<PdsEntry['blocks']>): NonNul
 
 function toDateString(date: Date): string {
   return toLocalDateInputValue(date)
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0')
+}
+
+function monthKey(year: number, month: number): string {
+  return `book-month:${year}-${pad2(month + 1)}`
+}
+
+function makeEmptyBookMonth(year: number, month: number): NonNullable<PdsEntry['bookMonth']> {
+  return {
+    year,
+    month,
+    notes: '',
+    weekdayGrid: Array(35).fill(''),
+    habits: Array(5).fill(''),
+    habitChecks: Array.from({ length: 5 }, () => Array(31).fill(false)),
+  }
 }
 export default function HomePage() {
   const { entries, replaceAll, upsert } = useEntries()
@@ -201,6 +220,27 @@ export default function HomePage() {
     setNotice(`Filled Sleep plans through year end. Created ${created}, updated ${updated}.`)
   }
 
+  const monthEntryId = monthKey(selectedYear, selectedMonth)
+  const existingMonthEntry = entries.find((e) => e.id === monthEntryId)
+  const bookMonthValue = existingMonthEntry?.bookMonth ?? makeEmptyBookMonth(selectedYear, selectedMonth)
+
+  const updateBookMonth = (next: NonNullable<PdsEntry['bookMonth']>) => {
+    const now = new Date().toISOString()
+    upsert({
+      id: monthEntryId,
+      date: `${next.year}-${pad2(next.month + 1)}-01`,
+      title: `Book Month: ${next.year}-${pad2(next.month + 1)}`,
+      tags: [],
+      plan: '',
+      do: '',
+      see: '',
+      type: 'monthly',
+      bookMonth: next,
+      createdAt: existingMonthEntry ? existingMonthEntry.createdAt : now,
+      updatedAt: now,
+    })
+  }
+
   return (
     <div className="min-h-full">
       <Header
@@ -225,9 +265,6 @@ export default function HomePage() {
             <Link to="/goals">
               <Button variant="secondary">Goals</Button>
             </Link>
-            <Button variant="secondary" onClick={onFillSleepThroughYearEnd}>
-              Fill Sleep (00–08) to year end
-            </Button>
             <Button variant="secondary" onClick={onPickImport}>
               Import
             </Button>
@@ -255,6 +292,67 @@ export default function HomePage() {
             onNextMonth={handleNextMonth}
             onToday={handleToday}
           />
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-sm font-semibold text-slate-900">Habit tracker</div>
+                <div className="mt-1 text-xs text-slate-600">
+                  Track habits for {selectedYear}-{pad2(selectedMonth + 1)}.
+                </div>
+              </div>
+              <Button variant="secondary" onClick={onFillSleepThroughYearEnd}>
+                Fill Sleep (00–08) to year end
+              </Button>
+            </div>
+
+            <div className="mt-4 overflow-x-auto">
+              <div className="min-w-[960px]">
+                <div className="grid grid-cols-[160px_repeat(31,minmax(0,1fr))] items-center gap-1 text-xs text-slate-500">
+                  <div />
+                  {Array.from({ length: 31 }, (_, i) => (
+                    <div key={i} className="text-center">
+                      {i + 1}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-2 grid grid-cols-1 gap-2">
+                  {bookMonthValue.habits.map((label, rowIdx) => (
+                    <div key={rowIdx} className="grid grid-cols-[160px_repeat(31,minmax(0,1fr))] items-center gap-1">
+                      <Input
+                        value={label}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const next = bookMonthValue.habits.slice()
+                          next[rowIdx] = e.target.value
+                          updateBookMonth({ ...bookMonthValue, habits: next })
+                        }}
+                        placeholder={`Habit ${rowIdx + 1}`}
+                      />
+                      {Array.from({ length: 31 }, (_, dayIdx) => {
+                        const checked = bookMonthValue.habitChecks[rowIdx]?.[dayIdx] ?? false
+                        return (
+                          <button
+                            type="button"
+                            key={dayIdx}
+                            onClick={() => {
+                              const checks = bookMonthValue.habitChecks.map((r) => r.slice())
+                              checks[rowIdx][dayIdx] = !checked
+                              updateBookMonth({ ...bookMonthValue, habitChecks: checks })
+                            }}
+                            className="flex h-6 w-full items-center justify-center rounded border border-slate-200 bg-white text-[10px] text-slate-600 hover:bg-slate-50"
+                            aria-pressed={checked}
+                          >
+                            {checked ? '✓' : ''}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
 
           {(monthlyGoals.length || yearlyGoals.length) ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
