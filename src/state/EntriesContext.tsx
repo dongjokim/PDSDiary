@@ -63,6 +63,17 @@ function normalizeEntries(entries: PdsEntry[]): PdsEntry[] {
   return entries.map(normalizeProjectTags)
 }
 
+function applyDefaultSleepPlan(blocks: NonNullable<PdsEntry['blocks']>): NonNullable<PdsEntry['blocks']> {
+  return blocks.map((b) => {
+    if (b.plan) return b
+    const hour = Number(b.t.split(':')[0])
+    if (!Number.isNaN(hour) && hour >= 0 && hour < 8) {
+      return { ...b, plan: 'Sleep' }
+    }
+    return b
+  })
+}
+
 export function EntriesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const userId = user?.supabaseUserId ?? user?.sub ?? null
@@ -129,7 +140,7 @@ export function EntriesProvider({ children }: { children: ReactNode }) {
       plan: '',
       do: '',
       see: '',
-      blocks: makeDefaultBlocks(),
+      blocks: applyDefaultSleepPlan(makeDefaultBlocks()),
       createdAt: now,
       updatedAt: now,
     }
