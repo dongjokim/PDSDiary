@@ -10,6 +10,8 @@ import { generateYearEndReport } from '../lib/reports'
 import { useEntries } from '../state/EntriesContext'
 import { useGoals } from '../state/GoalsContext'
 import { SupabaseSyncPanel } from '../components/SupabaseSyncPanel'
+import { makeDefaultBlocks } from '../lib/blocks'
+import { toLocalDateInputValue } from '../lib/time'
 
 function downloadJson(filename: string, data: unknown) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -34,8 +36,23 @@ function downloadText(filename: string, text: string) {
   a.remove()
   URL.revokeObjectURL(url)
 }
+
+function applySleepPlanToBlocks(blocks: NonNullable<PdsEntry['blocks']>): NonNullable<PdsEntry['blocks']> {
+  return blocks.map((b) => {
+    if (b.plan) return b
+    const hour = Number(b.t.split(':')[0])
+    if (!Number.isNaN(hour) && hour >= 0 && hour < 8) {
+      return { ...b, plan: 'Sleep' }
+    }
+    return b
+  })
+}
+
+function toDateString(date: Date): string {
+  return toLocalDateInputValue(date)
+}
 export default function HomePage() {
-  const { entries, replaceAll } = useEntries()
+  const { entries, replaceAll, upsert } = useEntries()
   const { goals } = useGoals()
   const [notice, setNotice] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement | null>(null)
@@ -130,6 +147,60 @@ export default function HomePage() {
     }
   }
 
+  const onFillSleepThroughYearEnd = () => {
+    const today = new Date()
+    const start = new Date(today)
+    start.setDate(start.getDate() + 1)
+    start.setHours(0, 0, 0, 0)
+    const end = new Date(today.getFullYear(), 11, 31)
+    end.setHours(0, 0, 0, 0)
+    if (start > end) {
+      setNotice('No future dates left in this year.')
+      return
+    }
+    if (!confirm(`Fill Sleep (00:00–08:00) plans from ${toDateString(start)} to ${toDateString(end)}?`)) {
+      return
+    }
+
+    const byDate = new Map(entries.map((e) => [e.date, e]))
+    let created = 0
+    let updated = 0
+    const now = new Date().toISOString()
+
+    const cursor = new Date(start)
+    while (cursor <= end) {
+      const date = toDateString(cursor)
+      const existing = byDate.get(date)
+      if (existing) {
+        const nextBlocks = applySleepPlanToBlocks(existing.blocks ?? makeDefaultBlocks())
+        upsert({
+          ...existing,
+          blocks: nextBlocks,
+          updatedAt: now,
+        })
+        updated += 1
+      } else {
+        const blocks = applySleepPlanToBlocks(makeDefaultBlocks())
+        upsert({
+          id: crypto.randomUUID(),
+          date,
+          title: '',
+          tags: [],
+          plan: '',
+          do: '',
+          see: '',
+          blocks,
+          createdAt: now,
+          updatedAt: now,
+        })
+        created += 1
+      }
+      cursor.setDate(cursor.getDate() + 1)
+    }
+
+    setNotice(`Filled Sleep plans through year end. Created ${created}, updated ${updated}.`)
+  }
+
   return (
     <div className="min-h-full">
       <Header
@@ -154,6 +225,9 @@ export default function HomePage() {
             <Link to="/goals">
               <Button variant="secondary">Goals</Button>
             </Link>
+            <Button variant="secondary" onClick={onFillSleepThroughYearEnd}>
+              Fill Sleep (00–08) to year end
+            </Button>
             <Button variant="secondary" onClick={onPickImport}>
               Import
             </Button>
