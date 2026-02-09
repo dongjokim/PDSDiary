@@ -31,6 +31,16 @@ export function TimeBlocks({
 }) {
   const isCompact = variant === 'compact'
 
+  const orderedBlocks = blocks
+    .map((b, idx) => ({ b, idx }))
+    .sort((a, b) => {
+      const hourA = Number(a.b.t.split(':')[0])
+      const hourB = Number(b.b.t.split(':')[0])
+      const aKey = (Number.isNaN(hourA) ? 0 : (hourA + 18) % 24)
+      const bKey = (Number.isNaN(hourB) ? 0 : (hourB + 18) % 24)
+      return aKey - bKey
+    })
+
   useEffect(() => {
     let changed = false
     const next = blocks.map((b) => {
@@ -75,7 +85,7 @@ export function TimeBlocks({
 
         <div className="px-4 py-3">
           <div className="grid grid-cols-1 gap-2">
-            {blocks.map((b, idx) => {
+            {orderedBlocks.map(({ b, idx }) => {
               const planId = `plan-${b.t}`
               const doId = `do-${b.t}`
               return (
@@ -163,7 +173,7 @@ export function TimeBlocks({
                             )
                           }}
                           placeholder="Comment…"
-                          className={clsx('h-8 w-24', b.do ? '' : 'placeholder:text-slate-300')}
+                          className={clsx('h-8 w-12', b.do ? '' : 'placeholder:text-slate-300')}
                         />
                       </div>
                     </div>
@@ -263,7 +273,7 @@ export function TimeBlocks({
                               )
                             }}
                             placeholder="Comment…"
-                            className={clsx(b.do ? '' : 'placeholder:text-slate-300')}
+                            className={clsx('h-8 w-12', b.do ? '' : 'placeholder:text-slate-300')}
                           />
                         </div>
                       </div>
