@@ -6,6 +6,7 @@ import { Calendar } from '../components/Calendar'
 import { GoogleCalendarBulkSync } from '../components/GoogleCalendarBulkSync'
 import { useEntries } from '../state/EntriesContext'
 import { calculateStreaks, getYearRange } from '../lib/calendar'
+import { toLocalDateInputValue } from '../lib/time'
 import type { PdsEntry } from '../types/pds'
 
 function getTagStats(entries: PdsEntry[]): Array<{ tag: string; count: number }> {
@@ -60,6 +61,27 @@ function getCompletionStats(entries: PdsEntry[]): {
   return { withPlan, withDo, withSee, withAllThree }
 }
 
+function getCompletionWindow(selectedYear: number): { start: string; end: string } {
+  const start = `${selectedYear}-01-01`
+  const today = new Date()
+  const currentYear = today.getFullYear()
+  if (selectedYear !== currentYear) {
+    return { start, end: `${selectedYear}-12-31` }
+  }
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  return { start, end: toLocalDateInputValue(yesterday) }
+}
+
+function filterCompletionEntries(entries: PdsEntry[], selectedYear: number): PdsEntry[] {
+  const { start, end } = getCompletionWindow(selectedYear)
+  if (end < start) return []
+  return entries.filter((e) => {
+    if (e.type && e.type !== 'daily') return false
+    return e.date >= start && e.date <= end
+  })
+}
+
 export default function YearPage() {
   const { entries, replaceAll } = useEntries()
   const today = new Date()
@@ -71,7 +93,9 @@ export default function YearPage() {
   const streaks = calculateStreaks(entries)
   const tagStats = getTagStats(yearEntries)
   const monthlyStats = getMonthlyStats(entries, selectedYear)
-  const completionStats = getCompletionStats(yearEntries)
+  const completionEntries = filterCompletionEntries(entries, selectedYear)
+  const completionStats = getCompletionStats(completionEntries)
+  const completionWindow = getCompletionWindow(selectedYear)
 
   const handlePrevMonth = () => {
     if (selectedMonth === 0) {
@@ -240,45 +264,47 @@ export default function YearPage() {
             {/* PDS Completion Stats */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
               <div className="text-sm font-semibold text-slate-900">Plan / Do / See Completion</div>
-              <div className="mt-1 text-xs text-slate-600">How often you fill each section</div>
+              <div className="mt-1 text-xs text-slate-600">
+                How often you fill each section ({completionWindow.start} → {completionWindow.end})
+              </div>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-4">
                 <div className="rounded-lg bg-blue-50 p-3 ring-1 ring-blue-200">
                   <div className="text-xs font-semibold text-blue-900">Plan</div>
                   <div className="mt-1 text-2xl font-bold text-blue-600">
-                    {yearEntries.length ? Math.round((completionStats.withPlan / yearEntries.length) * 100) : 0}%
+                    {completionEntries.length ? Math.round((completionStats.withPlan / completionEntries.length) * 100) : 0}%
                   </div>
                   <div className="mt-0.5 text-xs text-blue-700">
-                    {completionStats.withPlan} / {yearEntries.length} entries
+                    {completionStats.withPlan} / {completionEntries.length} entries
                   </div>
                 </div>
 
                 <div className="rounded-lg bg-indigo-50 p-3 ring-1 ring-indigo-200">
                   <div className="text-xs font-semibold text-indigo-900">Do</div>
                   <div className="mt-1 text-2xl font-bold text-indigo-600">
-                    {yearEntries.length ? Math.round((completionStats.withDo / yearEntries.length) * 100) : 0}%
+                    {completionEntries.length ? Math.round((completionStats.withDo / completionEntries.length) * 100) : 0}%
                   </div>
                   <div className="mt-0.5 text-xs text-indigo-700">
-                    {completionStats.withDo} / {yearEntries.length} entries
+                    {completionStats.withDo} / {completionEntries.length} entries
                   </div>
                 </div>
 
                 <div className="rounded-lg bg-purple-50 p-3 ring-1 ring-purple-200">
                   <div className="text-xs font-semibold text-purple-900">See</div>
                   <div className="mt-1 text-2xl font-bold text-purple-600">
-                    {yearEntries.length ? Math.round((completionStats.withSee / yearEntries.length) * 100) : 0}%
+                    {completionEntries.length ? Math.round((completionStats.withSee / completionEntries.length) * 100) : 0}%
                   </div>
                   <div className="mt-0.5 text-xs text-purple-700">
-                    {completionStats.withSee} / {yearEntries.length} entries
+                    {completionStats.withSee} / {completionEntries.length} entries
                   </div>
                 </div>
 
                 <div className="rounded-lg bg-emerald-50 p-3 ring-1 ring-emerald-200">
                   <div className="text-xs font-semibold text-emerald-900">All Three</div>
                   <div className="mt-1 text-2xl font-bold text-emerald-600">
-                    {yearEntries.length ? Math.round((completionStats.withAllThree / yearEntries.length) * 100) : 0}%
+                    {completionEntries.length ? Math.round((completionStats.withAllThree / completionEntries.length) * 100) : 0}%
                   </div>
                   <div className="mt-0.5 text-xs text-emerald-700">
-                    {completionStats.withAllThree} / {yearEntries.length} entries
+                    {completionStats.withAllThree} / {completionEntries.length} entries
                   </div>
                 </div>
               </div>

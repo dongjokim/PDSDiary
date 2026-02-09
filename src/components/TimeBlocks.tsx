@@ -56,7 +56,25 @@ export function TimeBlocks({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 px-4 py-3">
-        <div className="text-sm font-semibold text-slate-900">24 hours • Hourly tracking</div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-sm font-semibold text-slate-900">24 hours • Hourly tracking</div>
+          <label className="flex items-center gap-2 text-xs font-medium text-slate-700">
+            <input
+              type="checkbox"
+              checked={blocks.length > 0 && blocks.every((b) => (b.doTicks ?? 0) > 0)}
+              onChange={(e) => {
+                const checked = e.target.checked
+                onChange(
+                  blocks.map((b) => ({
+                    ...b,
+                    doTicks: checked ? 6 : undefined,
+                  })),
+                )
+              }}
+            />
+            Do (all day)
+          </label>
+        </div>
         <div className="mt-1 text-xs text-slate-600">
           {isCompact ? (
             <>Check the <span className="font-semibold">Do</span> box and add a short comment.</>
