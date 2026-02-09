@@ -5,7 +5,6 @@ import { Button, Input, Textarea } from '../components/ui'
 import { TimeBlocks } from '../components/TimeBlocks'
 import { BookDayLayout } from '../components/BookDayLayout'
 import { GoogleCalendarPanel } from '../components/GoogleCalendarPanel'
-import { TagPicker } from '../components/TagPicker'
 import type { PdsEntry } from '../types/pds'
 import { makeDefaultBlocks } from '../lib/blocks'
 import { applyGoogleEventsToHourlyPlan } from '../lib/applyCalendarToPlan'
@@ -13,29 +12,6 @@ import { toLocalDateInputValue } from '../lib/time'
 import { inferCategory } from '../lib/inferCategory'
 import { useEntries } from '../state/EntriesContext'
 
-
-function parseTags(raw: string): string[] {
-  const normalized = raw.replace(/#/g, ' ')
-  const parts = normalized
-    .split(/[,\n]+/)
-    .flatMap((chunk) => chunk.split(/\s+/))
-    .map((t) => t.trim())
-    .filter(Boolean)
-  // de-dupe, case-insensitive
-  const seen = new Set<string>()
-  const out: string[] = []
-  for (const t of parts) {
-    const key = t.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    out.push(t)
-  }
-  return out
-}
-
-function tagsToString(tags: string[]): string {
-  return tags.join(', ')
-}
 
 function applyInferredCategories(entry: PdsEntry): PdsEntry {
   let changed = false
@@ -72,7 +48,7 @@ function applyInferredCategories(entry: PdsEntry): PdsEntry {
 export default function EntryPage({ entryId, initialDate }: { entryId?: string; initialDate?: string }) {
   const nav = useNavigate()
   const id = entryId
-  const { getById, upsert, remove, createDraft, entries } = useEntries()
+  const { getById, upsert, remove, createDraft } = useEntries()
 
   const existing = useMemo(() => (id ? getById(id) : undefined), [getById, id])
 
@@ -148,10 +124,6 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
     setDraft((d) => ({ ...d, date: toLocalDateInputValue(new Date()) }))
   }
 
-  const tagSuggestions = Array.from(
-    new Set(entries.flatMap((e) => e.tags).map((t) => t.trim()).filter(Boolean)),
-  ).sort((a, b) => a.localeCompare(b))
-
   return (
     <div className="min-h-full">
       <Header
@@ -182,17 +154,7 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <div className="text-xs font-semibold text-slate-700">Title</div>
-                  <div className="mt-1">
-                    <Input
-                      value={draft.title}
-                      onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-                      placeholder="What is this entry about?"
-                    />
-                  </div>
-                </label>
+              <div className="w-full">
                 <label className="block">
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-semibold text-slate-700">Date</div>
@@ -224,22 +186,6 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
               </div>
             </div>
 
-            <label className="mt-4 block">
-              <div className="text-xs font-semibold text-slate-700">Tags</div>
-              <div className="mt-1">
-                <Input
-                  value={tagsToString(draft.tags)}
-                  onChange={(e) => setDraft((d) => ({ ...d, tags: parseTags(e.target.value) }))}
-                  placeholder="comma or space separated tags"
-                />
-              </div>
-              <div className="mt-1 text-xs text-slate-500">
-                Tip: separate tags with commas or spaces (e.g. work, family, exercise).
-              </div>
-              <div className="mt-2">
-                <TagPicker value={draft.tags} suggestions={tagSuggestions} onChange={(next) => setDraft((d) => ({ ...d, tags: next }))} />
-              </div>
-            </label>
           </div>
 
           {layout === 'book' ? (
@@ -252,48 +198,22 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
             />
           ) : (
             <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="text-sm font-semibold text-slate-900">Plan</div>
-                  <div className="mt-1 text-xs text-slate-600">What do you intend to do?</div>
-                  <div className="mt-3">
-                    <Textarea
-                      value={draft.plan}
-                      onChange={(e) => setDraft((d) => ({ ...d, plan: e.target.value }))}
-                      placeholder="Example: Write 30 minutes, then review yesterday’s notes…"
-                    />
-                  </div>
-                </section>
-
-                <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="text-sm font-semibold text-slate-900">Do</div>
-                  <div className="mt-1 text-xs text-slate-600">What did you actually do?</div>
-                  <div className="mt-3">
-                    <Textarea
-                      value={draft.do}
-                      onChange={(e) => setDraft((d) => ({ ...d, do: e.target.value }))}
-                      placeholder="What did you do?"
-                    />
-                  </div>
-                </section>
-
-                <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="text-sm font-semibold text-slate-900">See</div>
-                  <div className="mt-1 text-xs text-slate-600">What did you observe/learn?</div>
-                  <div className="mt-3">
-                    <Textarea
-                      value={draft.see}
-                      onChange={(e) => setDraft((d) => ({ ...d, see: e.target.value }))}
-                      placeholder="Example: Timer helps; writing earlier reduces distractions…"
-                    />
-                  </div>
-                </section>
-              </div>
-
               <TimeBlocks
                 blocks={draft.blocks ?? makeDefaultBlocks()}
                 onChange={(next) => setDraft((d) => ({ ...d, blocks: next }))}
               />
+
+              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="text-sm font-semibold text-slate-900">See</div>
+                <div className="mt-1 text-xs text-slate-600">What did you observe/learn?</div>
+                <div className="mt-3">
+                  <Textarea
+                    value={draft.see}
+                    onChange={(e) => setDraft((d) => ({ ...d, see: e.target.value }))}
+                    placeholder="Example: Timer helps; writing earlier reduces distractions…"
+                  />
+                </div>
+              </section>
             </>
           )}
 

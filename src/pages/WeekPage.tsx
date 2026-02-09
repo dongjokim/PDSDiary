@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Header } from '../components/Header'
-import { Button, Input, Textarea } from '../components/ui'
+import { Button, Textarea } from '../components/ui'
 import { TimeBlocks } from '../components/TimeBlocks'
-import { TagPicker } from '../components/TagPicker'
 import type { PdsEntry } from '../types/pds'
 import { makeDefaultBlocks } from '../lib/blocks'
 import { toLocalDateInputValue } from '../lib/time'
@@ -12,27 +11,6 @@ import { useEntries } from '../state/EntriesContext'
 
 type DoCategory = NonNullable<PdsEntry['doItemCategories']>[number]
 
-function parseTags(raw: string): string[] {
-  const normalized = raw.replace(/#/g, ' ')
-  const parts = normalized
-    .split(/[,\n]+/)
-    .flatMap((chunk) => chunk.split(/\s+/))
-    .map((t) => t.trim())
-    .filter(Boolean)
-  const seen = new Set<string>()
-  const out: string[] = []
-  for (const t of parts) {
-    const key = t.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    out.push(t)
-  }
-  return out
-}
-
-function tagsToString(tags: string[]): string {
-  return tags.join(', ')
-}
 
 function addDays(date: Date, days: number): Date {
   const d = new Date(date)
@@ -130,10 +108,6 @@ export default function WeekPage() {
     })
   }, [rangeDates, entriesByDate, createDraft])
 
-  const tagSuggestions = useMemo(
-    () => Array.from(new Set(entries.flatMap((e) => e.tags).map((t) => t.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
-    [entries],
-  )
 
   const updateDraft = (date: string, updater: (prev: PdsEntry) => PdsEntry) => {
     setDrafts((prev) => {
@@ -214,59 +188,7 @@ export default function WeekPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <label className="block">
-                      <div className="text-xs font-semibold text-slate-700">Title</div>
-                      <div className="mt-1">
-                        <Input
-                          value={draft.title}
-                          onChange={(e) => updateDraft(date, (d) => ({ ...d, title: e.target.value }))}
-                          placeholder="What is this entry about?"
-                        />
-                      </div>
-                    </label>
-                    <label className="block">
-                      <div className="text-xs font-semibold text-slate-700">Tags</div>
-                      <div className="mt-1">
-                        <Input
-                          value={tagsToString(draft.tags)}
-                          onChange={(e) => updateDraft(date, (d) => ({ ...d, tags: parseTags(e.target.value) }))}
-                          placeholder="comma or space separated tags"
-                        />
-                      </div>
-                      <div className="mt-2">
-                        <TagPicker
-                          value={draft.tags}
-                          suggestions={tagSuggestions}
-                          onChange={(next) => updateDraft(date, (d) => ({ ...d, tags: next }))}
-                        />
-                      </div>
-                    </label>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <section className="rounded-xl border border-slate-200 bg-white p-3">
-                      <div className="text-xs font-semibold text-slate-700">Plan</div>
-                      <div className="mt-2">
-                        <Textarea
-                          value={draft.plan}
-                          onChange={(e) => updateDraft(date, (d) => ({ ...d, plan: e.target.value }))}
-                          placeholder="What do you intend to do?"
-                        />
-                      </div>
-                    </section>
-
-                  <section className="rounded-xl border border-slate-200 bg-white p-3">
-                    <div className="text-xs font-semibold text-slate-700">Do</div>
-                    <div className="mt-2">
-                      <Textarea
-                        value={draft.do}
-                        onChange={(e) => updateDraft(date, (d) => ({ ...d, do: e.target.value }))}
-                        placeholder="What did you do?"
-                      />
-                    </div>
-                  </section>
-
+                  <div className="mt-4">
                     <section className="rounded-xl border border-slate-200 bg-white p-3">
                       <div className="text-xs font-semibold text-slate-700">See</div>
                       <div className="mt-2">
@@ -279,7 +201,7 @@ export default function WeekPage() {
                     </section>
                   </div>
 
-                  <div className="mt-4">
+                <div className="mt-4">
                     <TimeBlocks
                       blocks={draft.blocks ?? makeDefaultBlocks()}
                       onChange={(next) => updateDraft(date, (d) => ({ ...d, blocks: next }))}
