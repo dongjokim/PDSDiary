@@ -106,7 +106,7 @@ export function TimeBlocks({
                               ),
                             )
                           }}
-                          className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700"
+                          className="h-8 w-24 rounded-md border border-slate-200 bg-white px-1 text-[11px] text-slate-700"
                         >
                           {CATEGORY_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>

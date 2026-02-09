@@ -188,6 +188,14 @@ export default function WeekPage() {
                     </div>
                   </div>
 
+                <div className="mt-4">
+                  <TimeBlocks
+                    blocks={draft.blocks ?? makeDefaultBlocks()}
+                    onChange={(next) => updateDraft(date, (d) => ({ ...d, blocks: next }))}
+                    variant="compact"
+                  />
+                  </div>
+
                   <div className="mt-4">
                     <section className="rounded-xl border border-slate-200 bg-white p-3">
                       <div className="text-xs font-semibold text-slate-700">See</div>
@@ -199,14 +207,6 @@ export default function WeekPage() {
                         />
                       </div>
                     </section>
-                  </div>
-
-                <div className="mt-4">
-                  <TimeBlocks
-                    blocks={draft.blocks ?? makeDefaultBlocks()}
-                    onChange={(next) => updateDraft(date, (d) => ({ ...d, blocks: next }))}
-                    variant="compact"
-                  />
                   </div>
                 </section>
               )
