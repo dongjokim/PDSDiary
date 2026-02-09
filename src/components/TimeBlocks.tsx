@@ -89,7 +89,7 @@ export function TimeBlocks({
                   <div className="text-xs font-medium text-slate-600 tabular-nums">{b.t}</div>
                   {isCompact ? (
                     <div>
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-2 whitespace-nowrap">
                         <select
                           value={b.category ?? ''}
                           onChange={(e) => {
@@ -106,7 +106,7 @@ export function TimeBlocks({
                               ),
                             )
                           }}
-                          className="h-8 w-20 rounded-md border border-slate-200 bg-white px-1 text-[11px] text-slate-700"
+                          className="h-8 w-16 rounded-md border border-slate-200 bg-white px-1 text-[11px] text-slate-700"
                         >
                           {CATEGORY_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -122,7 +122,7 @@ export function TimeBlocks({
                               onChange(blocks.map((x, i) => (i === idx ? { ...x, projectTag: v || undefined } : x)))
                             }}
                             placeholder="Project tag…"
-                            className="h-8 max-w-[180px]"
+                            className="h-8 w-20"
                           />
                         ) : null}
                         {b.category ? (
@@ -154,10 +154,8 @@ export function TimeBlocks({
                             )
                           }}
                           placeholder="Comment…"
-                          className={clsx('h-8 max-w-[160px]', b.do ? '' : 'placeholder:text-slate-300')}
+                          className={clsx('h-8 w-24', b.do ? '' : 'placeholder:text-slate-300')}
                         />
-                      </div>
-                      <div className="mt-2">
                         <label htmlFor={planId} className="sr-only">
                           Plan at {b.t}
                         </label>
@@ -176,7 +174,7 @@ export function TimeBlocks({
                             )
                           }}
                           placeholder="Plan…"
-                          className={clsx('h-8 max-w-[160px]', b.plan ? '' : 'placeholder:text-slate-300')}
+                          className={clsx('h-8 w-24', b.plan ? '' : 'placeholder:text-slate-300')}
                         />
                       </div>
                     </div>
