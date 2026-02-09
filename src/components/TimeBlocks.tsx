@@ -106,7 +106,7 @@ export function TimeBlocks({
                               ),
                             )
                           }}
-                          className="h-8 w-24 rounded-md border border-slate-200 bg-white px-1 text-[11px] text-slate-700"
+                          className="h-8 w-20 rounded-md border border-slate-200 bg-white px-1 text-[11px] text-slate-700"
                         >
                           {CATEGORY_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -154,7 +154,7 @@ export function TimeBlocks({
                             )
                           }}
                           placeholder="Comment…"
-                          className={clsx('h-8 max-w-[220px]', b.do ? '' : 'placeholder:text-slate-300')}
+                          className={clsx('h-8 max-w-[160px]', b.do ? '' : 'placeholder:text-slate-300')}
                         />
                       </div>
                       <div className="mt-2">
@@ -176,7 +176,7 @@ export function TimeBlocks({
                             )
                           }}
                           placeholder="Plan…"
-                          className={clsx('h-8 max-w-[220px]', b.plan ? '' : 'placeholder:text-slate-300')}
+                          className={clsx('h-8 max-w-[160px]', b.plan ? '' : 'placeholder:text-slate-300')}
                         />
                       </div>
                     </div>
