@@ -202,10 +202,11 @@ export default function WeekPage() {
                   </div>
 
                 <div className="mt-4">
-                    <TimeBlocks
-                      blocks={draft.blocks ?? makeDefaultBlocks()}
-                      onChange={(next) => updateDraft(date, (d) => ({ ...d, blocks: next }))}
-                    />
+                  <TimeBlocks
+                    blocks={draft.blocks ?? makeDefaultBlocks()}
+                    onChange={(next) => updateDraft(date, (d) => ({ ...d, blocks: next }))}
+                    variant="compact"
+                  />
                   </div>
                 </section>
               )
