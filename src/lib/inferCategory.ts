@@ -30,6 +30,7 @@ const RULES: Rule[] = [
       'basketball',
       'baseball',
       'tennis',
+      'padel',
       'golf',
       'volleyball',
       'badminton',
