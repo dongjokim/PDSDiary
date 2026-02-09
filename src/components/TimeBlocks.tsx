@@ -90,6 +90,26 @@ export function TimeBlocks({
                   {isCompact ? (
                     <div>
                       <div className="flex items-center gap-2 whitespace-nowrap">
+                        <label htmlFor={planId} className="sr-only">
+                          Plan at {b.t}
+                        </label>
+                        <Input
+                          id={planId}
+                          value={b.plan ?? ''}
+                          onChange={(e) => {
+                            const v = e.target.value
+                            const inferred = b.category ? b.category : inferCategory(v)
+                            onChange(
+                              blocks.map((x, i) =>
+                                i === idx
+                                  ? { ...x, plan: v || undefined, category: inferred || x.category }
+                                  : x,
+                              ),
+                            )
+                          }}
+                          placeholder="Plan…"
+                          className={clsx('h-8 w-24', b.plan ? '' : 'placeholder:text-slate-300')}
+                        />
                         <select
                           value={b.category ?? ''}
                           onChange={(e) => {
@@ -100,7 +120,7 @@ export function TimeBlocks({
                                   ? {
                                       ...x,
                                       category: v || undefined,
-                                      projectTag: v === 'project' ? x.projectTag : undefined,
+                                      projectTag: undefined,
                                     }
                                   : x,
                               ),
@@ -114,17 +134,6 @@ export function TimeBlocks({
                             </option>
                           ))}
                         </select>
-                        {b.category === 'project' ? (
-                          <Input
-                            value={b.projectTag ?? ''}
-                            onChange={(e) => {
-                              const v = e.target.value
-                              onChange(blocks.map((x, i) => (i === idx ? { ...x, projectTag: v || undefined } : x)))
-                            }}
-                            placeholder="Project tag…"
-                            className="h-8 w-20"
-                          />
-                        ) : null}
                         {b.category ? (
                           <span className={clsx('h-3 w-3 rounded-full', categoryColorClass(b.category, b.projectTag))} />
                         ) : null}
@@ -155,26 +164,6 @@ export function TimeBlocks({
                           }}
                           placeholder="Comment…"
                           className={clsx('h-8 w-24', b.do ? '' : 'placeholder:text-slate-300')}
-                        />
-                        <label htmlFor={planId} className="sr-only">
-                          Plan at {b.t}
-                        </label>
-                        <Input
-                          id={planId}
-                          value={b.plan ?? ''}
-                          onChange={(e) => {
-                            const v = e.target.value
-                            const inferred = b.category ? b.category : inferCategory(v)
-                            onChange(
-                              blocks.map((x, i) =>
-                                i === idx
-                                  ? { ...x, plan: v || undefined, category: inferred || x.category }
-                                  : x,
-                              ),
-                            )
-                          }}
-                          placeholder="Plan…"
-                          className={clsx('h-8 w-24', b.plan ? '' : 'placeholder:text-slate-300')}
                         />
                       </div>
                     </div>
