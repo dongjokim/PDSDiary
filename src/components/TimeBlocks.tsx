@@ -170,70 +170,58 @@ export function TimeBlocks({
                   ) : (
                     <>
                       <div>
-                        <label htmlFor={planId} className="sr-only">
-                          Plan at {b.t}
-                        </label>
-                        <Input
-                          id={planId}
-                          value={b.plan ?? ''}
-                          onChange={(e) => {
-                            const v = e.target.value
-                            const inferred = b.category ? b.category : inferCategory(v)
-                            onChange(
-                              blocks.map((x, i) =>
-                                i === idx
-                                  ? { ...x, plan: v || undefined, category: inferred || x.category }
-                                  : x,
-                              ),
-                            )
-                          }}
-                          placeholder="Planned activity…"
-                          className={clsx(b.plan ? '' : 'placeholder:text-slate-300')}
-                        />
+                        <div className="flex items-center gap-2">
+                          <label htmlFor={planId} className="sr-only">
+                            Plan at {b.t}
+                          </label>
+                          <Input
+                            id={planId}
+                            value={b.plan ?? ''}
+                            onChange={(e) => {
+                              const v = e.target.value
+                              const inferred = b.category ? b.category : inferCategory(v)
+                              onChange(
+                                blocks.map((x, i) =>
+                                  i === idx
+                                    ? { ...x, plan: v || undefined, category: inferred || x.category }
+                                    : x,
+                                ),
+                              )
+                            }}
+                            placeholder="Planned activity…"
+                            className={clsx('flex-1', b.plan ? '' : 'placeholder:text-slate-300')}
+                          />
+                          <select
+                            value={b.category ?? ''}
+                            onChange={(e) => {
+                              const v = e.target.value as Block['category']
+                              onChange(
+                                blocks.map((x, i) =>
+                                  i === idx
+                                    ? {
+                                        ...x,
+                                        category: v || undefined,
+                                        projectTag: undefined,
+                                      }
+                                    : x,
+                                ),
+                              )
+                            }}
+                            className="h-8 w-24 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700"
+                          >
+                            {CATEGORY_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                       <div>
                         <label htmlFor={doId} className="sr-only">
                           Do at {b.t} (ticks + comment)
                         </label>
                         <div className="flex flex-col gap-2">
-                          <div className="flex items-center gap-2">
-                            <select
-                              value={b.category ?? ''}
-                              onChange={(e) => {
-                                const v = e.target.value as Block['category']
-                                onChange(
-                                  blocks.map((x, i) =>
-                                    i === idx
-                                      ? {
-                                          ...x,
-                                          category: v || undefined,
-                                          projectTag: v === 'project' ? x.projectTag : undefined,
-                                        }
-                                      : x,
-                                  ),
-                                )
-                              }}
-                              className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700"
-                            >
-                              {CATEGORY_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </option>
-                              ))}
-                            </select>
-                            {b.category === 'project' ? (
-                              <Input
-                                value={b.projectTag ?? ''}
-                                onChange={(e) => {
-                                  const v = e.target.value
-                                  onChange(blocks.map((x, i) => (i === idx ? { ...x, projectTag: v || undefined } : x)))
-                                }}
-                                placeholder="Project tag…"
-                                className="h-8"
-                              />
-                            ) : null}
-                          </div>
-
                           <div className="flex items-center gap-2">
                             {b.category ? (
                               <span className={clsx('h-3 w-3 rounded-full', categoryColorClass(b.category, b.projectTag))} />
