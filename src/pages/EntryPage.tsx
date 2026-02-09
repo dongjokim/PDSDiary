@@ -201,6 +201,7 @@ export default function EntryPage({ entryId, initialDate }: { entryId?: string; 
               <TimeBlocks
                 blocks={draft.blocks ?? makeDefaultBlocks()}
                 onChange={(next) => setDraft((d) => ({ ...d, blocks: next }))}
+                variant="compact"
               />
 
               <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
